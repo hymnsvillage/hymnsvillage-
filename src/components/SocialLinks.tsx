@@ -31,7 +31,7 @@ const socialMedia = [
 
 const SocialLinks = () => {
   return (
-    <div className="flex gap-3 text-white text-xl">
+    <div className="flex gap-4 text-white text-xl">
       {socialMedia.map((platform, index) => (
         <a
           key={index}

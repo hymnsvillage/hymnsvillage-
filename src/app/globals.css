@@ -24,6 +24,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
+
 .hover-underline::after {
   content: '';
   display: block;
@@ -33,7 +34,12 @@ body {
   transition: width 0.3s ease;
   margin-top: 2px;
 }
+
 .hover-underline:hover::after {
+  width: 100%;
+}
+
+.active-underline::after {
   width: 100%;
 }
 
