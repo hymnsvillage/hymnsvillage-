@@ -1,10 +1,83 @@
 import AboutUsSection from '@/components/About'
+import InsightsSection, { Article } from '@/components/Blog'
 import React from 'react'
+
+const featured: Article[] = [
+  {
+    title: 'Explore Nature With These Tranquil Trails',
+    category: 'Travel',
+    author: 'Hudson',
+    time: '1 day ago',
+    image: '/Group 15.png',
+  },
+  {
+    title: 'Explore Nature With These Tranquil Trails',
+    category: 'Travel',
+    author: 'Hudson',
+    time: '1 day ago',
+    image: '/Frame 102.png',
+  },
+  {
+    title: 'Explore Nature With These Tranquil Trails',
+    category: 'Travel',
+    author: 'Hudson',
+    time: '1 day ago',
+    image: '/ Group 13.png',
+  },
+  {
+    title: 'Explore Nature With These Tranquil Trails',
+    category: 'Travel',
+    author: 'Hudson',
+    time: '1 day ago',
+    image: '/Group 12.png',
+  }, {
+    title: 'Explore Nature With These Tranquil Trails',
+    category: 'Travel',
+    author: 'Hudson',
+    time: '1 day ago',
+    image: '/Group 14.png',
+  },
+  
+  // Add more articles as needed
+];
+
+const recent: Article[] = [
+  {
+    title: 'The Future of AI in Everyday Life',
+    category: 'Technology',
+    author: 'Hudson',
+    time: '2 days ago',
+    image: '/Rectangle 2.png',
+  },
+  {
+    title: 'The Future of AI in Everyday Life',
+    category: 'Technology',
+    author: 'Hudson',
+    time: '2 days ago',
+    image: '/Rectangle 13.png',
+  },
+  {
+    title: 'The Future of AI in Everyday Life',
+    category: 'Technology',
+    author: 'Hudson',
+    time: '2 days ago',
+    image: '/Rectangle 9.png',
+  },
+  {
+    title: 'The Future of AI in Everyday Life',
+    category: 'Technology',
+    author: 'Hudson',
+    time: '2 days ago',
+    image: '/Rectangle 17.png',
+  },
+  // Add more recent articles
+];
 
 function page() {
   return (
     <div>
       <AboutUsSection />
+      <InsightsSection featured={featured} recent={recent} />
     </div>
   )
 }
