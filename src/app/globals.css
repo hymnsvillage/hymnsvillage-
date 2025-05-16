@@ -43,3 +43,16 @@ body {
   width: 100%;
 }
 
+.login-underline::after {
+  content: '';
+  display: block;
+  width: 0%;
+  height: 2px;
+  background: black;
+  transition: width 0.3s ease;
+  margin-top: 2px;
+}
+
+.login-underline:hover::after {
+  width: 100%;
+}
