@@ -31,7 +31,7 @@ const featured: Article[] = [
     category: 'Travel',
     author: 'Hudson',
     time: '1 day ago',
-    image: '/ Group 13.png',
+    image: '/Group 13.png',
   },
   {
     title: 'Explore Nature With These Tranquil Trails',
