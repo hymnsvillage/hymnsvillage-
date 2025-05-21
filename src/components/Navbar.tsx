@@ -61,7 +61,7 @@ const Navbar = () => {
             {/* Sign Up Button */}
             <Link
               href="/signup"
-              className="hover-underline px-4 py-2 bg-slate-800 rounded-full hover:bg-slate-700 transition capitalize"
+className="hover-underline px-4 py-2 bg-slate-800 rounded-full hover:bg-slate-900 transition capitalize"
             >
               Sign Up
             </Link>
