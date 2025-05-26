@@ -8,8 +8,7 @@ import SearchBar from '@/components/blog/SearchBar'
 import React from 'react'
 
 
-
-function page() {
+function Blogpage() {
   return (
     <div>
         <BlogHeroBanner />
@@ -18,7 +17,8 @@ function page() {
        < RecentPosts />
        <RecommendedBlog />
     </div>
-  )
+  );
 }
 
-export default page
+export default Blogpage
+

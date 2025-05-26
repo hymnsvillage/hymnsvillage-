@@ -1,6 +1,6 @@
 import Image from "next/image";
 import SocialLinks from "./SocialLinks";
-import MobileMenu from "./MobileMenu";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
@@ -9,13 +9,13 @@ export default function HeroSection() {
 
       {/* Background image */}
         <Image
-            src="/hymns-hero.jpg"
-            alt="Hero Background"
-            layout="fill"
-            objectFit="cover"
-            quality={100}
-            className="z-10 w-full h-full"
-            style={{ filter: "blur(1px)" }} // Optional: Add a blur effect to the background image
+          src="/hymns-hero.jpg"
+          alt="Hero Background"
+          layout="fill"
+          objectFit="cover"
+          quality={100}
+          className="z-10 w-full h-full"
+          style={{ filter: "blur(1px)" }} // Optional: Add a blur effect to the background image
         />
       
 
@@ -31,12 +31,18 @@ export default function HeroSection() {
             finds harmonious expression.
           </p>
           <div className="flex space-x-4">
-            <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-medium">
-                Discover Hymnals
-            </button>
-            <button className="border border-white px-6 py-2 rounded-full text-sm font-medium">
-                Create Account
-            </button>
+            <Link 
+              href='/hymnals' 
+              className="bg-white text-black px-6 py-2 rounded-full text-sm font-medium text-center"
+            >
+              Discover Hymnals
+            </Link>
+            <Link 
+              href='/signup' 
+              className="border border-white text-white px-6 py-2 rounded-full text-sm font-medium text-center"
+            >
+              Create Account
+            </Link>
           </div>
         </div>
 
