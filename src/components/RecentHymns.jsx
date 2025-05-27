@@ -68,8 +68,8 @@ export default function RecentHymns() {
             <h2 className="text-slate-900 text-3xl font-semibold mb-6">Recent Hymns</h2>
             <div className="flex justify-between space-x-4 mb-6">
                 <Button variant="outline">Efik Hymns</Button>
-                <Button variant="outline">Ibibio Hymns</Button>
                 <Button variant="outline">English Hymns</Button>
+                <Button variant="outline">Ibibio Hymns</Button>
             </div>
         </div>
         
