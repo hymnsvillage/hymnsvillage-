@@ -1,4 +1,5 @@
 import AboutUsSection from '@/components/About'
+import AdvertisementSection from '@/components/Advert';
 import InsightsSection from '@/components/Blog';
 import FeaturedHymns from '@/components/FeaturedHymns';
 import HeroSection from '@/components/Hero';
@@ -91,6 +92,7 @@ function Home() {
       <AboutUsSection />
       <FeaturedHymns />
       <InsightsSection featured={featured} recent={recent} />
+      <AdvertisementSection />
     </div>
   )
 }

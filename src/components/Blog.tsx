@@ -39,10 +39,14 @@ export default function InsightsSection({ featured, recent }: InsightsSectionPro
         </div>
       </div>
 
+      {/* Recent article */}
+      <div className='mb-6'>
+        <h2 className="text-xl font-medium text-black">Recent article</h2>
+      </div>
+
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left: Featured */}
-        <h2 className="text-xl font-medium text-black">Recent article</h2>
         <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
           {featured.map((article, index) => (
             <div key={index} className="bg-white rounded-lg overflow-hidden">
@@ -114,3 +118,4 @@ function getBadgeColor(category: string) {
       return 'bg-blue-500';
   }
 }
+

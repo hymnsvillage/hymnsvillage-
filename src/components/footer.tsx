@@ -56,7 +56,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Logo + About */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center justify-center md:items-start md:justify-start gap-2 mb-4 cursor-pointer">
               <Image 
                 src="/logo 1.png" 
                 alt="Hymns Village" 
@@ -100,7 +100,7 @@ const Footer = () => {
           {/* Social Media */}
           <div>
             <h4 className="font-semibold mb-3">Socials</h4>
-            <div className='flex flex-col items-center justify-center gap-4 mt-4'>
+            <div className='flex flex-col items-center md:items-start justify-center gap-4 mt-4'>
               {/* <span className="text-sm text-gray-300">Follow us on:</span> */}
               <SocialLinks />
             </div>
