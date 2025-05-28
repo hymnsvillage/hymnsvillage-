@@ -32,7 +32,7 @@ const Sidebar: FC = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-screen bg-white border-r p-5 border-t-4">
+    <aside className="w-64 h-screen bg-white border-r-1 p-5 border-t-4">
       <nav className="flex flex-col space-y-6">
         {navItems.map((item) => (
           <Link
