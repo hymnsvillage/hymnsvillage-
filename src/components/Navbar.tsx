@@ -51,7 +51,7 @@ const Navbar = () => {
 
           <div className='flex items-center justify-between gap-2 text-white'>
             {/* Login Button */}
-            <button className='bg-transparent border border-white text-white'>
+            <button className='bg-transparent border border-white text-white rounded-full'>
               <Link
                 href="/login"
                 className="capitalize font-semibold"
