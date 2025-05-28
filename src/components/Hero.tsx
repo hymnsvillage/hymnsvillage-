@@ -1,7 +1,7 @@
 import Image from "next/image";
 import SocialLinks from "./SocialLinks";
 import Link from "next/link";
-import Button from "./ui/Button";
+import {Button} from "@/components/ui/button";
 
 export default function HeroSection() {
   return (

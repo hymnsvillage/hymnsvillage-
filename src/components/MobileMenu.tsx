@@ -6,7 +6,7 @@ import Link from 'next/link';
 import SocialLinks from './SocialLinks';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import Button from './ui/Button';
+import {Button} from '@/components/ui/button';
 
 
 const navLinks = [

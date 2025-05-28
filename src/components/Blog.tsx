@@ -3,7 +3,7 @@
 import Image from 'next/image';
 // import SearchBar from './blog/SearchBar';
 import { FaSearch } from 'react-icons/fa';
-import Input from './ui/Input';
+import {Input} from '@/components/ui/input';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 

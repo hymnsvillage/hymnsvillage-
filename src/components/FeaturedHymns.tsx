@@ -2,28 +2,28 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import Button from './ui/Button';
+import {Button} from './ui/button';
 
 const hymns = [
   {
     title: 'Efik Hymns',
     image: '/efik-hymns.jpg',
     description:
-      'JEHOVAH – UBọn ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm..." Psalm 145:8 – 14. Abasi',
+      'JEHOVAH - UBọn ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm..." Psalm 145:8 - 14. Abasi',
     link: '/hymns/efik',
   },
   {
     title: 'English Hymns',
     image: '/english-hymns.jpg',
     description:
-      'THE CHURCH CONGREGATIONAL HYMNS 1 THE LORD – HIS GLORY (C. M.) C. H. 242 The Lord Is Very Gracious. The Lord Is Gracious And Full Of Compassion.',
+      'THE CHURCH CONGREGATIONAL HYMNS 1 THE LORD - HIS GLORY (C. M.) C. H. 242 The Lord Is Very Gracious. The Lord Is Gracious And Full Of Compassion.',
     link: '/hymns/english',
   },
   {
     title: 'Ibibio Hymns',
     image: '/ibibio-hymns.jpg',
     description:
-      'JEHOVAH – UBÔÑ ESIE 1 JEHOVAH – UBÔÑ ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm.',
+      'JEHOVAH - UBÔÑ ESIE 1 JEHOVAH - UBÔÑ ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm.',
     link: '/hymns/ibibio',
   }
 ];

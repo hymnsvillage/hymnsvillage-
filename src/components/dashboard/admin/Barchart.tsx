@@ -1,6 +1,14 @@
 "use client";
 
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import {
   BarChart,
   Bar,
   XAxis,
@@ -41,23 +49,27 @@ const chartData = {
   ],
 };
 
+type ChartOption = keyof typeof chartData;
+
 const VisitorsBarChart = () => {
-  const [selected, setSelected] = useState<"Daily" | "Weekly" | "Monthly">("Monthly");
+  const [selected, setSelected] = useState<ChartOption>("Daily");
   const data = chartData[selected];
 
   return (
     <div className="bg-white p-5 rounded-xl shadow-sm w-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-md font-semibold text-gray-800">Visitors</h2>
-        <select
-          className="border border-gray-200 text-sm px-3 py-1 rounded-md text-gray-600 bg-white focus:outline-none"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value as any)}
-        >
-          <option>Daily</option>
-          <option>Weekly</option>
-          <option>Monthly</option>
-        </select>
+
+        <Select value={selected} onValueChange={(value: ChartOption) => setSelected(value)}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Daily">Daily</SelectItem>
+            <SelectItem value="Weekly">Weekly</SelectItem>
+            <SelectItem value="Monthly">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <ResponsiveContainer width="100%" height={250}>

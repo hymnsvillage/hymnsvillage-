@@ -3,8 +3,8 @@
 import { useState } from 'react';
 // import { FaFacebookF, FaXTwitter, FaYoutube, FaLinkedinIn } from 'react-icons/fa6';
 import SocialLinks from './SocialLinks';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaRegUser } from 'react-icons/fa';

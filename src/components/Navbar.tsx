@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import MobileMenu from './MobileMenu';
-import Button from './ui/Button';
+import {Button} from '@/components/ui/button';
 
 
 const navLinks = [

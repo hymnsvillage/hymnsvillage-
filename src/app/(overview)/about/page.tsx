@@ -29,7 +29,7 @@ const AboutPage = () => {
       <div className="bg-slate-100 py-10 px-4 md:px-20 text-black">
         <h2 className="text-lg font-semibold mb-4">About us</h2>
         <div className="md:flex gap-10">
-          <div className="md:w-1/2 border-t-4 border-r-4 border-gray-black p-2 mb-6 md:mb-0">
+          <div className="md:w-1/2 border-b-4 border-r-4 border-gray-black p-2 mb-6 md:mb-0">
             <Image
               src="/Mananger-1.png"
               alt="Hymns Village Founder"
