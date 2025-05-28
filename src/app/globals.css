@@ -5,11 +5,7 @@
   --foreground: #171717;
 }
 
-<<<<<<< HEAD
 :root {
-=======
-@theme inline {
->>>>>>> dev
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
@@ -59,7 +55,3 @@ body {
 .login-underline:hover::after {
   width: 100%;
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> dev
