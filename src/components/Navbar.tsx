@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import MobileMenu from './MobileMenu';
-import { Button } from './ui/button';
 
 
 const navLinks = [
@@ -52,23 +51,23 @@ const Navbar = () => {
 
           <div className='flex items-center justify-between gap-2 text-white'>
             {/* Login Button */}
-            <Button className='bg-transparent border border-white text-white'>
+            <button className='bg-transparent border border-white text-white'>
               <Link
                 href="/login"
                 className="capitalize font-semibold"
               >
                 Log In
               </Link>
-            </Button>
-            {/* Sign Up Button */}
-            <Button className='hover:border-white'>
+            </button>
+            {/* Sign Up button */}
+            <button className='hover:border-white'>
               <Link
                 href="/signup"
                 className="capitalize font-semibold"
               >
                 Sign Up
               </Link>
-            </Button>
+            </button>
           </div>
         </div>
 

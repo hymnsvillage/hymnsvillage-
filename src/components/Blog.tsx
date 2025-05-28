@@ -3,7 +3,6 @@
 import Image from 'next/image';
 // import SearchBar from './blog/SearchBar';
 import { FaSearch } from 'react-icons/fa';
-import {Input} from '@/components/ui/input';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -50,7 +49,7 @@ export default function InsightsSection({ featured, recent }: InsightsSectionPro
             <div className="flex items-center pl-3">
               <FaSearch className="h-5 w-5 text-gray-300" />
             </div>
-            <Input
+            <input
               type="text"
               placeholder="Search articles"
               value={query}

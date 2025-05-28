@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button } from './ui/button';
 
 const AboutUsSection = () => {
   const router = useRouter();
@@ -16,12 +15,12 @@ const AboutUsSection = () => {
       {/* Top White Banner */}
       <div className="absolute top-0 left-0 right-0 z-30 bg-white text-black px-8 py-4 flex md:flex-row justify-between items-center md:items-center gap-4 md:gap-0">
         <h2 className="text-xl font-semibold">About us</h2>
-        <Button
+        <button
           onClick={handleLearnMore}
           className="text-[16px]"
         >
           Learn More
-        </Button>
+        </button>
       </div>
 
       {/* Background image */}

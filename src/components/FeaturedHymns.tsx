@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {Button} from './ui/button';
 
 const hymns = [
   {
@@ -34,9 +33,9 @@ export default function FeaturedHymns() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-black text-xl md:text-2xl font-semibold">Explore Featured Hymns</h2>
         <Link href="/hymnals">
-          <Button className="border border-black rounded-full px-5 py-2 text-black text-sm hover:bg-black hover:text-white transition">
+          <button className="border border-black rounded-full px-5 py-2 text-black text-sm hover:bg-black hover:text-white transition">
             Discover Our Hymns
-          </Button>
+          </button>
         </Link>
       </div>
 
