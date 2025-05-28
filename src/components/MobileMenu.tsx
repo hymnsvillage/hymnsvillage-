@@ -6,6 +6,7 @@ import Link from 'next/link';
 import SocialLinks from './SocialLinks';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import Button from './ui/Button';
 
 
 const navLinks = [
@@ -61,20 +62,22 @@ export default function MobileMenu() {
 
         {/* Auth Buttons */}
         <div className="flex flex-col items-center gap-3">
-          <Link 
-            href="/login" 
-            className="login-underline text-gray-900 font-medium border px-6 py-2 rounded-full" 
-            onClick={() => setOpen(false)}
-          >
-            Log In
-          </Link>
-          <Link
-            href="/signup"
-            className="hover-underline bg-black hover:bg-gray-900 text-white px-6 py-2 rounded-full"
-            onClick={() => setOpen(false)}
-          >
-            Sign Up
-          </Link>
+          <Button>
+            <Link 
+              href="/login" 
+              onClick={() => setOpen(false)}
+            >
+              Log In
+            </Link>
+          </Button>
+          <Button className="bg-gray-950 text-white">
+            <Link
+              href="/signup"
+              onClick={() => setOpen(false)}
+            >
+              Sign Up
+            </Link>
+          </Button>
         </div>
 
         {/* Social Icons */}

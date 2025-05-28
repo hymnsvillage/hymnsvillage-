@@ -1,6 +1,7 @@
 import Image from "next/image";
 import SocialLinks from "./SocialLinks";
-import MobileMenu from "./MobileMenu";
+import Link from "next/link";
+import Button from "./ui/Button";
 
 export default function HeroSection() {
   return (
@@ -9,13 +10,13 @@ export default function HeroSection() {
 
       {/* Background image */}
         <Image
-            src="/hymns-hero.jpg"
-            alt="Hero Background"
-            layout="fill"
-            objectFit="cover"
-            quality={100}
-            className="z-10 w-full h-full"
-            style={{ filter: "blur(1px)" }} // Optional: Add a blur effect to the background image
+          src="/hymns-hero.jpg"
+          alt="Hero Background"
+          layout="fill"
+          objectFit="cover"
+          quality={100}
+          className="z-10 w-full h-full"
+          style={{ filter: "blur(2px)" }} // Optional: Add a blur effect to the background image
         />
       
 
@@ -25,18 +26,26 @@ export default function HeroSection() {
           <h1 className="text-4xl md:text-5xl font-medium leading-none mb-4">
             Unveil Sacred Melodies.<br />Connect Through Faith.
           </h1>
-          <p className="text-gray-300 text-[12px] mb-6">
+          <p className="text-slate-300 text-[12px] mb-6">
             Explore a curated digital sanctuary of English and Efik hymns, alongside insightful articles
             that resonate with the heart of faith. Join a vibrant community where shared devotion
             finds harmonious expression.
           </p>
-          <div className="flex space-x-4">
-            <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-medium">
+          <div className="flex justify-between gap-8">
+            <Button className="border-none">
+              <Link 
+                href='/hymnals' 
+              >
                 Discover Hymnals
-            </button>
-            <button className="border border-white px-6 py-2 rounded-full text-sm font-medium">
+              </Link>
+            </Button>
+            <Button className="bg-transparent border border-white text-white hover:border-none">
+              <Link 
+                href='/signup' 
+              >
                 Create Account
-            </button>
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -53,5 +62,4 @@ export default function HeroSection() {
     </section>
   );
 }
-
 

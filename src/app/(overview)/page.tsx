@@ -1,5 +1,7 @@
 import AboutUsSection from '@/components/About'
+import AdvertisementSection from '@/components/Advert';
 import InsightsSection from '@/components/Blog';
+import FeaturedHymns from '@/components/FeaturedHymns';
 import HeroSection from '@/components/Hero';
 import React from 'react';
 
@@ -88,9 +90,12 @@ function Home() {
       <HeroSection />
       {/* <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100"> */}
       <AboutUsSection />
+      <FeaturedHymns />
       <InsightsSection featured={featured} recent={recent} />
+      <AdvertisementSection />
     </div>
   )
 }
 
 export default Home;
+
