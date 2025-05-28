@@ -1,8 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+// import SearchBar from './blog/SearchBar';
 import { FaSearch } from 'react-icons/fa';
 import Input from './ui/Input';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 
 export interface Article {
@@ -19,23 +22,48 @@ interface InsightsSectionProps {
 }
 
 export default function InsightsSection({ featured, recent }: InsightsSectionProps) {
+
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/search?query=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
+
   return (
     <section className="max-w-7xl mx-auto px-8 py-12 bg-white">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:justify-between mb-8 gap-4">
         <h1 className="text-2xl font-semibold text-black">Discover New Insights.</h1>
         <div className="flex flex-1 justify-center md:justify-start max-w-md">
-          <div className="flex w-full rounded-full overflow-hidden border border-gray-300">
+          {/* <div className="w-full flex flex-1 px-0 py-0 bg-transparent">
+            <SearchBar />
+          </div> */}
+          <form 
+            onSubmit={handleSubmit}
+            className="flex w-full rounded-full overflow-hidden border border-gray-300"
+          >
             <div className="flex items-center pl-3">
               <FaSearch className="h-5 w-5 text-gray-300" />
             </div>
             <Input
               type="text"
               placeholder="Search articles"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               className="flex-1 px-4 py-2 outline-none placeholder:text-gray-300 text-gray-800"
             />
-            <button className="bg-black text-white px-4 py-2 cursor-pointer">Search</button>
-          </div>
+            <button
+              type="submit"
+              className="bg-black text-white px-6 py-2 text-sm font-medium rounded-full cursor-pointer"
+            >
+              Search
+            </button>
+          </form>
         </div>
       </div>
 
