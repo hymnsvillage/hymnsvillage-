@@ -13,14 +13,13 @@ const socialMedia = [
     name: 'Tiktok',
     icon: <FaTiktok />,
     href: 'https://www.tiktok.com/@hymns_village',
-    bg: 'bg-[#1111]', 
+    bg: 'bg-[#111]', 
   },
   {
     name: 'Instagram',
     icon: <FaInstagram />,
     href: 'https://www.instagram.com/hymns_village/',
-    bg: 'bg-[#ff0024]'
-  },
+    bg: 'bg-gradient-to-br from-yellow-400 via-pink-500 via-40% to-purple-600',  },
   {
     name: 'Twitter (X)',
     icon: <FaXTwitter />,

@@ -32,14 +32,14 @@ export default function HeroSection() {
             finds harmonious expression.
           </p>
           <div className="flex justify-between gap-8">
-            <Button className="border-none">
+            <Button className="border-none bg-white text-black rounded-2xl hover:text-white">
               <Link 
                 href='/hymnals' 
               >
                 Discover Hymnals
               </Link>
             </Button>
-            <Button className="bg-transparent border border-white text-white hover:border-none">
+            <Button className="bg-transparent border border-white text-white hover:border-none rounded-2xl">
               <Link 
                 href='/signup' 
               >

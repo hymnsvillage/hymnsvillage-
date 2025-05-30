@@ -51,7 +51,7 @@ const Navbar = () => {
 
           <div className='flex items-center justify-between gap-2 text-white'>
             {/* Login Button */}
-            <button className='bg-transparent border border-white text-white rounded-full'>
+            <button className='hover-underline bg-transparent text-white py-2 px-5 rounded-full'>
               <Link
                 href="/login"
                 className="capitalize font-semibold"
@@ -60,7 +60,7 @@ const Navbar = () => {
               </Link>
             </button>
             {/* Sign Up button */}
-            <button className='hover:border-white'>
+            <button className='hover-underline bg-black py-2 px-5 border hover:border-white rounded-2xl'>
               <Link
                 href="/signup"
                 className="capitalize font-semibold"

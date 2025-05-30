@@ -44,9 +44,12 @@ const Footer = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="flex-1 text-sm"
+              className="flex-1 text-sm border-none"
             />
-            <Button type="submit">
+            <Button 
+              type="submit"
+              className='bg-white text-black rounded-2xl hover:bg-black hover:text-white'
+            >
              Subscribe
             </Button>
           </form>

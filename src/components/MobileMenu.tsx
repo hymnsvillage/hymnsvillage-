@@ -61,7 +61,7 @@ export default function MobileMenu() {
 
         {/* Auth Buttons */}
         <div className="flex flex-col items-center gap-3">
-          <button>
+          <button className='hover-underline border rounded-2xl py-2 px-5 hover:bg-black hover:text-white'>
             <Link 
               href="/login" 
               onClick={() => setOpen(false)}
@@ -69,7 +69,7 @@ export default function MobileMenu() {
               Log In
             </Link>
           </button>
-          <button className="bg-gray-950 text-white">
+          <button className="hover-underline py-2 px-5 bg-black text-white hover:bg-gray-100 hover:text-black rounded-2xl">
             <Link
               href="/signup"
               onClick={() => setOpen(false)}
