@@ -13,18 +13,18 @@ import Link from "next/link";
 
 const navItems = [
   { label: "Home", icon: Home, href: "/" },
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Blog", icon: Hash, href: "/blog" },
-  { label: "Hymns", icon: Music, href: "/hymns" },
-  { label: "Profile", icon: User, href: "/profile" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/user" },
+  { label: "Blog", icon: Hash, href: "/dashboard/user/userblog" },
+  { label: "Hymns", icon: Music, href: "/dashboard/user/hymns" },
+  { label: "Profile", icon: User, href: "/dashboard/user/profile" },
+  { label: "Settings", icon: Settings, href: "/dashboard/user/settings" },
   { label: "Log Out", icon: LogOut, href: "/logout" },
 ];
 
-export default function Sidebar() {
+export default function UserSidebar() {
   return (
-    <aside className="hidden md:flex w-56 min-h-screen bg-white border-r px-5 py-6 flex-col">
-      <nav className="flex flex-col gap-6 ">
+    <aside className="w-64 h-screen bg-white border-r-1 p-5 border-t-4">
+      <nav className="flex flex-col space-y-6 ">
         {navItems.map((item) => (
           <Link
             key={item.label}

@@ -161,4 +161,31 @@ body {
   }
 
 }
+.mention {
+  color: #2563eb;
+  background-color: #e0f2fe;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.mention-popup {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  z-index: 1000;
+}
+.btn {
+  @apply px-3 py-1 rounded bg-gray-100 text-sm font-medium hover:bg-gray-200 transition;
+}
+.mention-popup {
+  @apply absolute bg-white border rounded shadow-md p-2 space-y-1 z-50;
+}
+
+.mention-popup div {
+  @apply px-2 py-1 cursor-pointer hover:bg-gray-100;
+}
+
 
