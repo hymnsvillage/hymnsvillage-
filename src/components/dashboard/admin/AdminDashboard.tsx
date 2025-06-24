@@ -42,7 +42,7 @@ const AdminDashboard: FC = () => {
         </div>
 
         {/* Notifications panel */}
-        <NotificationPanel />
+        <NotificationPanel isAdmin={false} />
       </div>
 
       {/* BOTTOM GRID: Chart + Social Media */}

@@ -8,16 +8,16 @@ import Youtube from '@tiptap/extension-youtube';
 import TextAlign from '@tiptap/extension-text-align';
 import CharacterCount from '@tiptap/extension-character-count';
 import Mention from '@tiptap/extension-mention';
-import Image from '@tiptap/extension-image';
+import ImageExtension from '@tiptap/extension-image';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import CodeBlock from '@tiptap/extension-code-block';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Blockquote from '@tiptap/extension-blockquote';
 import HardBreak from '@tiptap/extension-hard-break';
-import NextImage from 'next/image';
 
-import type { SuggestionProps } from '@tiptap/suggestion';
+import { SuggestionOptions } from '@tiptap/suggestion';
+import NextImage from 'next/image';
 
 import {
   Bold,
@@ -39,33 +39,44 @@ import {
   Eraser,
 } from 'lucide-react';
 
-const mentionSuggestion = {
+type MentionItem = { id: number; label: string };
+
+const mentionSuggestion: Partial<SuggestionOptions<MentionItem>> = {
   char: '@',
-  items: ({ query }: { query: string }) => {
-    return [
+  items: ({ query }) => {
+    const users: MentionItem[] = [
       { id: 1, label: 'Christiana' },
       { id: 2, label: 'JohnDoe' },
       { id: 3, label: 'JaneDev' },
-    ].filter(item => item.label.toLowerCase().startsWith(query.toLowerCase()));
+    ];
+    return users.filter(user =>
+      user.label.toLowerCase().startsWith(query.toLowerCase())
+    );
   },
   render: () => {
     let popup: HTMLDivElement | null = null;
 
     return {
-      onStart: (props: SuggestionProps) => {
+      onStart: ({ items, clientRect }) => {
         popup = document.createElement('div');
         popup.className = 'mention-popup bg-white border rounded shadow p-2 absolute z-50';
-        popup.innerHTML = props.items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
+        popup.innerHTML = items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
         document.body.appendChild(popup);
-      },
-      onUpdate: (props: SuggestionProps) => {
-        if (popup) {
-          popup.innerHTML = props.items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
+
+        const rect = clientRect?.();
+        if (popup && rect) {
+          popup.style.top = `${rect.bottom + window.scrollY}px`;
+          popup.style.left = `${rect.left + window.scrollX}px`;
         }
       },
-      onKeyDown: () => false,
+      onUpdate: ({ items }) => {
+        if (popup) {
+          popup.innerHTML = items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
+        }
+      },
       onExit: () => {
-        if (popup) popup.remove();
+        popup?.remove();
+        popup = null;
       },
     };
   },
@@ -76,6 +87,7 @@ const RichTextEditor = () => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Worship');
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
+  const [altText, setAltText] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -84,19 +96,21 @@ const RichTextEditor = () => {
       Underline,
       Youtube.configure({ width: 640, height: 360 }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      CharacterCount.configure({ limit: 500 }),
+      CharacterCount.configure({ limit: 35000 }), // ~7000 words
       Mention.configure({
         HTMLAttributes: { class: 'mention text-blue-500 font-semibold' },
         suggestion: mentionSuggestion,
       }),
-      Image.configure({ inline: false, allowBase64: true }),
+      ImageExtension.configure({ inline: false, allowBase64: true }),
       Highlight,
-      Placeholder.configure({ placeholder: 'Start writing your article here...' }),
+      Placeholder.configure({
+        placeholder: 'Start writing your article here...',
+      }),
       HorizontalRule,
       Blockquote,
       HardBreak.configure({ keepMarks: false }),
     ],
-    content: '<p>Hello <u>World</u>! Mention @Christiana here. Paste a YouTube link or upload an image.</p>',
+    content: '',
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,16 +118,11 @@ const RichTextEditor = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setFeaturedImage(reader.result as string);
+        if (typeof reader.result === 'string') {
+          setFeaturedImage(reader.result);
+        }
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const promptYouTube = () => {
-    const url = prompt('Paste YouTube URL');
-    if (url && editor) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run();
     }
   };
 
@@ -122,8 +131,15 @@ const RichTextEditor = () => {
     const previewWindow = window.open('', '_blank');
     if (previewWindow) {
       previewWindow.document.write(`
-        <html><head><title>${title}</title><style>img{max-width:100%;height:auto;}</style></head><body>
-        ${featuredImage ? `<div style="text-align:center;"><img src="${featuredImage}" alt="Featured Image"/><h1>${title}</h1></div>` : ''}
+        <html><head><title>${title}</title>
+        <style>body{font-family:sans-serif;padding:20px;} img{max-width:100%;height:auto;} h1{margin-top:1rem;}</style></head><body>
+        ${featuredImage
+          ? `<div style="position:relative;text-align:center;">
+              <img src="${featuredImage}" alt="${altText}" />
+              <h1 style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);color:white;background:rgba(0,0,0,0.6);padding:0.5rem 1rem;border-radius:0.5rem;">${title}</h1>
+            </div>`
+          : ''
+        }
         ${content}
         </body></html>
       `);
@@ -134,48 +150,63 @@ const RichTextEditor = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Sidebar */}
         <div className="space-y-6">
           <div>
-            <label className="block text-l font-medium text-gray-700 mb-5">Article Title</label>
+            <label className="block font-medium mb-2">Article Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title of article"
-              className="w-full border rounded-md p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-md p-3 text-sm shadow-sm"
             />
           </div>
 
           <div>
-            <label className="block text-l font-medium text-gray-700 mb-3">Select Featured Image</label>
+            <label className="block font-medium mb-2">Select Featured Image</label>
             <div
-              className="w-full h-40 border border-dashed border-gray-400 rounded-md flex items-center justify-center relative bg-gray-50 hover:bg-gray-100 cursor-pointer overflow-hidden"
-              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-40 border border-dashed border-gray-400 rounded-md relative cursor-pointer overflow-hidden bg-gray-50 hover:bg-gray-100"
+               onClick={() => fileInputRef.current?.click()}
             >
-              {featuredImage ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm z-0">
+                     <ImageIcon className="mb-1" />
+                     Click to choose image
+                </div>
+                <input
+                    type="file"
+                     accept="image/*"
+                     ref={fileInputRef}
+                     onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+               </div>
+            {featuredImage && (
+              <div className="mt-4">
                 <NextImage
                   src={featuredImage}
-                  alt="Selected featured image"
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-md"
+                  alt={altText || 'Featured Image'}
+                  width={640}
+                  height={360}
+                  className="rounded-md object-cover w-full"
                 />
-              ) : (
-                <div className="text-center text-gray-500 text-sm z-10">
-                  <ImageIcon className="mx-auto mb-1" />
-                  Click to choose image
-                </div>
-              )}
-              <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </div>
+                <input
+                  type="text"
+                   placeholder="Alt text for image"
+                   value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                  className="mt-2 w-full border rounded-md p-2 text-sm"
+                   />
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-l font-medium text-gray-700 mb-3">Select Category</label>
+            <label className="block font-medium mb-2">Select Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full border rounded-md p-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-md p-3 text-sm shadow-sm"
             >
               <option value="Worship">Worship</option>
               <option value="Praise">Praise</option>
@@ -184,6 +215,7 @@ const RichTextEditor = () => {
           </div>
         </div>
 
+        {/* Editor */}
         <div className="md:col-span-2 space-y-4">
           <div className="flex flex-wrap gap-2">
             <button onClick={() => editor?.chain().focus().toggleBold().run()} className="btn"><Bold size={16} /></button>
@@ -203,13 +235,16 @@ const RichTextEditor = () => {
             <button onClick={() => editor?.chain().focus().setTextAlign('center').run()} className="btn"><AlignCenter size={16} /></button>
             <button onClick={() => editor?.chain().focus().setTextAlign('right').run()} className="btn"><AlignRight size={16} /></button>
             <button onClick={() => fileInputRef.current?.click()} className="btn"><ImageIcon size={16} /></button>
-            <button onClick={promptYouTube} className="btn"><YoutubeIcon size={16} /></button>
+            <button onClick={() => {
+              const url = prompt('Paste YouTube URL');
+              if (url) editor?.chain().focus().setYoutubeVideo({ src: url }).run();
+            }} className="btn"><YoutubeIcon size={16} /></button>
           </div>
 
           <EditorContent editor={editor} className="min-h-[300px] border p-4 rounded-md bg-gray-50" />
 
           <div className="text-sm text-gray-500">
-            {editor?.storage.characterCount.characters()}/500 characters
+            {editor?.storage.characterCount.characters()}/35,000 characters
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
