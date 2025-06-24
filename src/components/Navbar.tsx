@@ -11,7 +11,7 @@ const navLinks = [
   { name: 'Blog', href: '/blog' },
   { name: 'Hymnals', href: '/hymnals' },
   { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'Contact', href: '/overview/Auth/contact' },
 ];
 
 const Navbar = () => {
@@ -53,7 +53,7 @@ const Navbar = () => {
             {/* Login Button */}
             <button className='hover-underline bg-transparent text-white py-2 px-5 border rounded-full'>
               <Link
-                href="/login"
+                href="/overview/Auth/login"
                 className="capitalize font-semibold"
               >
                 Log In
@@ -62,7 +62,7 @@ const Navbar = () => {
             {/* Sign Up button */}
             <button className='hover-underline bg-white text-black py-2 px-5 border hover:bg-black hover:text-white hover:border-white rounded-full'>
               <Link
-                href="/signup"
+                href="/overview/Auth/signup"
                 className="capitalize font-semibold"
               >
                 Sign Up
