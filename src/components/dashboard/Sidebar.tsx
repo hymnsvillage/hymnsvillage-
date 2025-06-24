@@ -20,11 +20,11 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: "Home", href: "/", icon: <Home className="w-5 h-5" /> },
-  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+  { label: "Dashboard", href: "/dashboard/admin", icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: "Manage Articles", href: "/dashboard/admin/manage_articles", icon: <FileText className="w-5 h-5" /> },
   { label: "Manage Hymns", href: "/hymns", icon: <Music className="w-5 h-5" /> },
   { label: "Manage Users", href: "/dashboard/admin/users", icon: <Users className="w-5 h-5" /> },
-  { label: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" /> },
+  { label: "Settings", href: "/dashboard/settings", icon: <Settings className="w-5 h-5" /> },
   { label: "Log Out", href: "/logout", icon: <LogOut className="w-5 h-5" /> },
 ];
 
