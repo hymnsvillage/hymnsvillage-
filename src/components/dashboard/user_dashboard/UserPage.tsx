@@ -93,7 +93,7 @@ const topShares = [
 
 export default function UserDashboard() {
   return (
-    <div>
+    <div className="p-6 space-y-6 bg-[#f5f6f8] border-t-3 min-h-screen">
       <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
         Dashboard
       </h2>

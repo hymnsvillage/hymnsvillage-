@@ -3,55 +3,62 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const AboutUsSection = () => {
+interface AboutUsSectionProps {
+  heading?: string;
+  imageSrc: string;
+  topText: string;
+  bottomText: string;
+  link?: string;
+}
+
+const AboutUsSection = ({
+  heading = 'About us',
+  imageSrc,
+  topText,
+  bottomText,
+  link = '/about',
+}: AboutUsSectionProps) => {
   const router = useRouter();
 
   const handleLearnMore = () => {
-    router.push('/about');
+    router.push(link);
   };
 
   return (
     <section className="relative w-full h-[500px] text-white overflow-hidden">
-      {/* Top White Banner */}
-      <div className="absolute top-0 left-0 right-0 z-30 bg-white text-black px-8 py-4 flex md:flex-row justify-between items-center md:items-center gap-4 md:gap-0">
-        <h2 className="text-xl font-semibold">About us</h2>
+      {/* Top Banner */}
+      <div className="absolute top-0 left-0 right-0 z-30 bg-white text-black px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
+        <h2 className="text-xl font-semibold">{heading}</h2>
         <button
           onClick={handleLearnMore}
-          className="text-[16px]"
+          className="text-[16px] underline hover:text-blue-600 transition"
+          aria-label="Learn more"
         >
           Learn More
         </button>
       </div>
 
-      {/* Background image */}
+      {/* Background Image */}
       <Image
-        src="/frame-1mg.jpg" // Replace with your own image path in /public
+        src={imageSrc}
         alt="About background"
-        layout="fill"
-        objectFit="cover"
+        fill
+        className="object-cover z-0"
         quality={100}
-        className="z-0"
+        priority
       />
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/40 z-10" />
 
-      {/* Top-left paragraph */}
-      <div className="absolute top-28 left-8 max-w-md z-20">
-        <p className="text-sm md:text-base leading-relaxed">
-          Looking for a one-stop channel with loads of soul-lifting and classical hymns cutting across various climes and times?
-          <br />
-          Search no further, for you are in the right place.
-        </p>
+      {/* Top Text */}
+      <div className="absolute top-28 left-4 md:left-8 right-4 max-w-md z-20">
+        <p className="text-sm md:text-base leading-relaxed">{topText}</p>
       </div>
 
-      {/* Bottom-right paragraph */}
-      <div className="absolute bottom-12 right-8 max-w-md text-right z-20">
-        <p className="text-sm md:text-base leading-relaxed">
-          At Hymns village you get to find an array of life-changing contents and transforming hymns — for thanksgiving, praise, worship, or whatever phase of life you’re in — all delivered through a melodious voice.
-          <br />
-          With our thousands of streams across various platforms, we are undoubtedly doing the Lord’s work of soul-winning.
-        </p>
+      {/* Bottom Text */}
+      <div className="absolute bottom-12 right-4 md:right-8 left-4 md:left-auto max-w-md text-right z-20">
+        <p className="text-sm md:text-base leading-relaxed">{bottomText}</p>
       </div>
     </section>
   );
