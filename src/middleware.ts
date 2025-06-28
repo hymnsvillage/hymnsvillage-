@@ -20,5 +20,6 @@ export const config = {
     "/api/auth/logout",
     "/api/auth/profile",
     "/api/auth/change-password",
+    "/api/blog/:path*",
   ],
 };

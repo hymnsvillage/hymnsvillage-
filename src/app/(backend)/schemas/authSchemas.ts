@@ -10,6 +10,7 @@ export const registerSchema = z
     password: z.string().min(6).openapi({ example: "User$1234" }),
     name: z.string().min(1).openapi({ example: "Clever Akanimoh" }),
     username: z.string().min(1).openapi({ example: "CrushClever" }),
+    role: z.string().min(1).openapi({ example: "user" }),
   })
   .openapi({ ref: "RegisterPayload", description: "Register a new user" });
 
