@@ -17,6 +17,45 @@ export const hymnCreateSchema = z
   })
   .openapi({ ref: "HymnCreate", description: "Create a new hymn" });
 
-export const hymnUpdateSchema = hymnCreateSchema
-  .partial()
-  .openapi({ ref: "HymnUpdate" , description:"Update an existing hymn based on it's ID"});
+export const hymnUpdateSchema = hymnCreateSchema.partial().openapi({
+  ref: "HymnUpdate",
+  description: "Update an existing hymn based on it's ID",
+});
+
+export const hymnSearchSchema = z
+  .object({
+    title: z.string().optional().openapi({ example: "Holy, Holy, Holy" }),
+    lyrics: z.string().optional().openapi({ example: "Blessed Trinity" }),
+    author: z.string().optional().openapi({ example: "Reginald Heber" }),
+    number: z.number().optional().openapi({ example: 101 }),
+    language: z
+      .enum(["English", "Ibibio", "Efik"])
+      .optional()
+      .openapi({ example: "Ibibio" }),
+  })
+  .openapi({
+    ref: "HymnSearch",
+    description:
+      "The search keyword for specific hymns. This can be done on the frontend",
+  });
+
+export const hymnCommentSchema = z
+  .object({
+    content: z
+      .string()
+      .min(1)
+      .max(500)
+      .openapi({ example: "This hymn really touched my heart." }),
+  })
+  .openapi({ ref: "HymnComment", description: "Comment for hymns" });
+
+export const hymnMediaUploadSchema = z
+  .object({
+    hymnId: z
+      .string()
+      .uuid()
+      .openapi({ example: "d1f1c318-6a90-4f7f-bc89-7dc3f1a4b6b4" }),
+    type: z.enum(["audio", "video"]).openapi({ example: "audio" }),
+    media: z.any().openapi({ type: "string", format: "binary" }),
+  })
+  .openapi({ ref: "HymnMediaUpload", description: "Media upload for hymns" });

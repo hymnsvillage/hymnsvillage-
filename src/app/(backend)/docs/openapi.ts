@@ -15,7 +15,11 @@ import {
   searchQuerySchema,
   tagInputSchema,
 } from "../schemas/blogSchemas";
-import { hymnCreateSchema, hymnUpdateSchema } from "../schemas/hymnSchemas";
+import {
+  hymnCreateSchema,
+  hymnSearchSchema,
+  hymnUpdateSchema,
+} from "../schemas/hymnSchemas";
 
 export const openApiDocument = createDocument({
   openapi: "3.1.0",
@@ -271,6 +275,33 @@ export const openApiDocument = createDocument({
           "200": { description: "Hymn deleted" },
           "403": { description: "Forbidden" },
         },
+      },
+    },
+
+    "/api/hymn/search": {
+      post: {
+        requestBody: {
+          content: { "application/json": { schema: hymnSearchSchema } },
+        },
+        responses: { "200": { description: "Filtered hymns" } },
+      },
+    },
+    "/api/hymn/categories": {
+      get: {
+        responses: { "200": { description: "List of hymn categories" } },
+      },
+    },
+    "/api/hymn/by-category": {
+      get: {
+        parameters: [
+          {
+            name: "name",
+            in: "query",
+            required: true,
+            example: "Praise",
+          },
+        ],
+        responses: { "200": { description: "Filtered hymns by category" } },
       },
     },
   },
