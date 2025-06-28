@@ -40,7 +40,6 @@ export async function POST(req: Request) {
     customResponse({
       message:
         "User registered successfully, Please check your mail to activate your account.",
-      // data: { user: data.user },
     })
   );
 }

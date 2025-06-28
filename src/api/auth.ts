@@ -7,7 +7,7 @@ export type RegisterInput = {
   password: string;
 };
 
-export const register = (data: RegisterInput) =>
+export const registerUser = (data: RegisterInput) =>
   client.post("/auth/register", data);
 
 export const login = (data: { email: string; password: string }) =>
