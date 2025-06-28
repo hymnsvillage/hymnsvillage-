@@ -37,3 +37,8 @@ export const forgotPasswordSchema = z
     ref: "ForgotPasswordPayload",
     description: "Send password reset email",
   });
+
+export const changePassSchema = z.object({
+  accessToken: z.string().openapi({ example: "ejk3...." }),
+  newPassword: z.string().min(6).openapi({ example: "User$1234" }),
+});
