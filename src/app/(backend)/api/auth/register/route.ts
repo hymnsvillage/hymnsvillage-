@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(
     customResponse({
-      message: "User registered successfully",
+      message:
+        "User registered successfully, Please check your mail to activate your account.",
       // data: { user: data.user },
     })
   );
