@@ -1,32 +1,42 @@
-// app/login/page.tsx
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { loginUser } from "@/api/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 // ✅ Zod validation schema
 const LoginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
 });
 
 type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function LoginForm() {
+  const router = useRouter();
   const {
     register,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log('Form Submitted:', data);
-    // handle login logic here
+  const onSubmit = async (data: LoginFormData) => {
+    const result = await loginUser(data);
+    if (result.data.success) {
+      reset();
+      router.push("/");
+      toast.success(result.data.message);
+    }
   };
 
   return (
@@ -39,17 +49,19 @@ export default function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
-
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="text-sm font-medium block text-gray-700">
+          <label
+            htmlFor="email"
+            className="text-sm font-medium block text-gray-700"
+          >
             Email:
           </label>
           <input
             type="email"
             placeholder="e.g Example@mail.com"
             className="w-full p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
-            {...register('email')}
+            {...register("email")}
           />
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
@@ -58,17 +70,22 @@ export default function LoginForm() {
 
         {/* Password Field */}
         <div>
-          <label htmlFor="password" className="text-sm font-medium block text-gray-700">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium block text-gray-700"
+          >
             Password:
           </label>
           <input
             type="password"
             placeholder="At least 8 character"
             className="w-full p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
-            {...register('password')}
+            {...register("password")}
           />
           {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
@@ -103,7 +120,7 @@ export default function LoginForm() {
         </button>
 
         <p className="text-sm text-center text-gray-700">
-          Don’t have an account?{' '}
+          Don’t have an account?{" "}
           <Link
             href="/signup"
             className="capitalize text-[#DC4407] font-semibold hover:underline"

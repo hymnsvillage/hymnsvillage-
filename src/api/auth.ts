@@ -10,7 +10,7 @@ export type RegisterInput = {
 export const registerUser = (data: RegisterInput) =>
   client.post("/auth/register", data);
 
-export const login = (data: { email: string; password: string }) =>
+export const loginUser = (data: { email: string; password: string }) =>
   client.post("/auth/login", data);
 
 export const logout = () => client.post("/auth/logout");
