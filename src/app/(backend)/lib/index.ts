@@ -1,3 +1,4 @@
 export * from "./customResponse";
+export * from "./schemas/authSchemas";
 export * from "./supabase";
-export * from "./validators/authSchemas";
+

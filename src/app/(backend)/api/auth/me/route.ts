@@ -1,5 +1,5 @@
 import { customResponse } from "@/app/(backend)/lib/customResponse";
-import { updateMeSchema } from "@/app/(backend)/lib/validators/profileSchemas";
+import { updateMeSchema } from "@/app/(backend)/lib/schemas/profileSchemas";
 import { supabaseClient } from "@/supabase";
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
