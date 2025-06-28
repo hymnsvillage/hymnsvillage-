@@ -1,16 +1,22 @@
-// docs/openapi.ts
 import {
-    forgotPasswordSchema,
-    loginSchema,
-    registerSchema,
-    updateProfileSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  updateProfileSchema,
 } from "@/app/(backend)/lib";
+import "@/app/(backend)/zod-extend";
+import { appUrl } from "@/supabase";
 import { createDocument } from "zod-openapi";
 
 export const openApiDocument = createDocument({
   openapi: "3.1.0",
-  info: { title: "Auth API", version: "1.0.0" },
-  servers: [{ url: "http://localhost:3000" }],
+  info: {
+    title: "Hymns Village API",
+    version: "1.0.0",
+    description: "This is the official hymns village api documentation",
+    contact: { email: "cleverakanimoh02@gmail.com", name: "Clever Akanimoh" },
+  },
+  servers: [{ url: appUrl! }],
   paths: {
     "/api/auth/register": {
       post: {
@@ -46,8 +52,6 @@ export const openApiDocument = createDocument({
           "401": { description: "Not authenticated" },
         },
       },
-    },
-    "/api/auth/profile": {
       put: {
         requestBody: {
           content: { "application/json": { schema: updateProfileSchema } },
@@ -58,7 +62,7 @@ export const openApiDocument = createDocument({
         },
       },
     },
-    "/api/auth/forgot": {
+    "/api/auth/forgot-password": {
       post: {
         requestBody: {
           content: { "application/json": { schema: forgotPasswordSchema } },

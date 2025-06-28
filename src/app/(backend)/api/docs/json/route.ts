@@ -1,5 +1,5 @@
 import { openApiDocument } from "@/app/(backend)/docs/openapi";
-import "@/zod-extend";
+import "@/app/(backend)/zod-extend";
 
 export function GET() {
   return Response.json(openApiDocument);

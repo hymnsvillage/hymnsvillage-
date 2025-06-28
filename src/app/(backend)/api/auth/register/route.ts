@@ -5,8 +5,12 @@
  * @returns {400} Validation error or Supabase error
  */
 
-import { registerSchema } from "@/app/(backend)/lib";
-import { appUrl, supabaseClient } from "@/supabase";
+import {
+  createSupabaseServerClient,
+  customResponse,
+  registerSchema,
+} from "@/app/(backend)/lib";
+import { appUrl } from "@/supabase";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -19,18 +23,23 @@ export async function POST(req: Request) {
     );
   }
 
-  const { email, password, name } = parsed.data;
-
-  const { data, error } = await supabaseClient.supabase.auth.signUp({
+  const { email, password, name, username } = parsed.data;
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { name },
+      data: { name, username },
       emailRedirectTo: `${appUrl}/auth/callback`,
     },
   });
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ user: data.user });
+  return NextResponse.json(
+    customResponse({
+      message: "User registered successfully",
+      // data: { user: data.user },
+    })
+  );
 }
