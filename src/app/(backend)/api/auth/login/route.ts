@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   const { email, password } = parsed.data;
   const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   return NextResponse.json(
     customResponse({
-      // data: { user: data.user },
+      data: { user: data.user },
       statusCode: 200,
       message: "Login was successful",
     })

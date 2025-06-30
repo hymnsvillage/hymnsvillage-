@@ -1,3 +1,4 @@
+import { createSupabaseServerClient } from "@/app/(backend)/lib";
 import { customResponse } from "@/app/(backend)/lib/customResponse";
 import { updateMeSchema } from "@/app/(backend)/schemas/profileSchemas";
 import { supabaseClient } from "@/supabase";
@@ -31,7 +32,8 @@ function getMimeType(buffer: Buffer): string | null {
 }
 
 export async function GET() {
-  const { data, error } = await supabaseClient.supabase.auth.getUser();
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
