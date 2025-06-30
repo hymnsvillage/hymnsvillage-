@@ -5,6 +5,7 @@ export type RegisterInput = {
   username: string;
   email: string;
   password: string;
+  role: string;
 };
 
 export const registerUser = (data: RegisterInput) =>

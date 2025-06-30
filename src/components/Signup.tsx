@@ -41,7 +41,7 @@ export default function SignupForm() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
   });
@@ -58,6 +58,7 @@ export default function SignupForm() {
       name: `${firstName} ${lastName}`,
       username,
       password,
+      role: "user",
     });
 
     if (result.data.success) {
@@ -214,10 +215,11 @@ export default function SignupForm() {
 
         {/* Submit */}
         <button
+          disabled={isSubmitting}
           type="submit"
-          className="w-full bg-black text-white py-3 rounded-md hover:opacity-90 transition"
+          className="w-full bg-black text-white py-3 rounded-md hover:opacity-90 disabled:opacity-85 transition cursor-pointer"
         >
-          Create account →
+          {isSubmitting ? "Creating account..." : "Create account →"}
         </button>
 
         {successMessage && (
