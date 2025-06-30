@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Bell, Search } from "lucide-react";
 
-export default function Topbar() {
+export default  function Topbar() {
   const router = useRouter();
 
   return (
@@ -46,6 +46,7 @@ export default function Topbar() {
 
         {/* Avatar with black ring */}
         <div className="w-9 h-9 rounded-full ring-2 ring-gray-500 overflow-hidden">
+          <p>{""}</p>
           <Image
             src="/avatar.jpg"
             alt="Admin Avatar"

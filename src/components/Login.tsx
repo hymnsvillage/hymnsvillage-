@@ -25,7 +25,7 @@ export default function LoginForm() {
     register,
     reset,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
   });
@@ -96,10 +96,11 @@ export default function LoginForm() {
         </div>
 
         <button
+          disabled={isSubmitting}
           type="submit"
           className="w-full capitalize bg-black text-white py-3 rounded-md hover:opacity-90 transition"
         >
-          Log in →
+          {isSubmitting ? "Logging in" : "  Log in →"}
         </button>
 
         <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
