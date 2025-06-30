@@ -5,72 +5,88 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Music, Play, Download } from 'lucide-react';
 
+// Import JSON files
+import english from '@/data/englishHymns.json';
+import efik from '@/data/efikHymns.json';
+import ibibio from '@/data/ibibioHymns.json';
+import Link from 'next/link';
+
 type HymnCategory = 'All' | 'Efik' | 'English' | 'Ibibio';
 
 type Hymn = {
+  slug: string;
+  id: number;
   title: string;
   author: string;
+  lyrics: string;
+  category: HymnCategory;
   date: string;
   image: string;
-  category: HymnCategory;
   audioUrl: string;
   lyricsUrl: string;
 };
 
-const hymns: Hymn[] = [
-  {
-    title: 'The Life - Giving Spirit',
-    author: 'Dennis Cooper',
-    date: 'January 3, 2025',
-    image: '/hymn-image-4.jpg',
-    category: 'Efik',
-    audioUrl: '/sample-audio.mp3',
-    lyricsUrl: '/sample-lyrics.pdf',
-  },
-  {
-    title: 'Neque Porro Quisquam Est, Qui Dolorem Ipsum',
-    author: 'Emilyn Sutherland',
-    date: 'January 3, 2025',
-    image: '/hymn-image-5.jpg',
+// Add extra display props (date, image...) to all imported hymns
+const allHymns: Hymn[] = [
+  ...english.map((h) => ({
+    ...h,
     category: 'English',
+    date: '2025-01-03',
+    image: '/hymn-image-5.jpg',
     audioUrl: '/sample-audio.mp3',
     lyricsUrl: '/sample-lyrics.pdf',
-  },
-  {
-    title: 'Quis Autem Vel Eum Iur',
-    author: 'Leonel Edwards',
-    date: 'January 3, 2025',
-    image: '/hymn-image-6.jpg',
+  })),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...efik.map((h: any) => ({
+    ...h,
+    category: 'Efik',
+    date: '2025-01-03',
+    image: '/hymn-image-4.jpg',
+    audioUrl: '/sample-audio.mp3',
+    lyricsUrl: '/sample-lyrics.pdf',
+  })),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...ibibio.map((h: any) => ({
+    ...h,
     category: 'Ibibio',
+    date: '2025-01-03',
+    image: '/hymn-image-6.jpg',
     audioUrl: '/sample-audio.mp3',
     lyricsUrl: '/sample-lyrics.pdf',
-  },
-  // Add more hymns as needed
+  })),
 ];
 
 export default function RecentHymns() {
-  const [selectedCategory, setSelectedCategory] = useState<HymnCategory>('All');
-  const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<HymnCategory>('All');
+    const [currentAudio, setCurrentAudio] = useState<string | null>(null);
 
-  const filteredHymns =
+    const filteredHymns =
     selectedCategory === 'All'
-      ? hymns
-      : hymns.filter((hymn) => hymn.category === selectedCategory);
+      ? allHymns
+      : allHymns.filter((hymn) => hymn.category === selectedCategory);
 
-  const handlePlay = (audioUrl: string) => {
+    const handlePlay = (audioUrl: string) => {
     setCurrentAudio(audioUrl);
-  };
+    };
 
-  const handleDownload = (lyricsUrl: string, title: string) => {
+    const handleDownload = (lyricsUrl: string, title: string) => {
     const a = document.createElement('a');
-    a.href = lyricsUrl;
-    a.download = `${title}.pdf`;
-    a.click();
-  };
+       a.href = lyricsUrl;
+       a.download = `${title}.pdf`;
+       a.click();
+    };
 
-  const handleMusicInfo = (title: string) => {
-    alert(`Showing info for "${title}"`);
-  };
+    const handleMusicInfo = (title: string) => {
+       alert(`Showing info for "${title}"`);
+     };
+
+    const slugify = (title: string) =>
+      title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')  // remove punctuation
+      .replace(/\s+/g, '-')         // replace spaces with hyphens
+      .trim();
+
 
   return (
     <div className="bg-white p-6 max-w-screen-xl mx-auto">
@@ -90,9 +106,9 @@ export default function RecentHymns() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredHymns.map((hymn, index) => (
+        {filteredHymns.map((hymn) => (
           <div
-            key={index}
+            key={hymn.id}
             className="bg-white rounded-2xl shadow-lg overflow-hidden transition hover:shadow-xl"
           >
             <div className="relative w-full h-48">
@@ -105,9 +121,13 @@ export default function RecentHymns() {
             </div>
             <div className="p-4">
               <p className="text-sm text-slate-500">{hymn.author}</p>
-              <h3 className="text-lg font-semibold text-slate-700 leading-tight mt-1 mb-2 truncate">
-                {hymn.title}
-              </h3>
+
+              <Link href={`/hymnals/${hymn.category.toLowerCase()}/${slugify(hymn.title)}`}>
+                <h3 className="text-lg font-semibold text-slate-700 hover:underline mt-1 mb-2 truncate">
+                  {hymn.title}
+                </h3>
+              </Link>
+
               <p className="text-sm text-red-500">{hymn.date}</p>
               <div className="flex space-x-2 mt-4">
                 <Button
