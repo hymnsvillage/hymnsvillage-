@@ -23,13 +23,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const { email, password, name, username } = parsed.data;
+  const { email, password, name, username, role } = parsed.data;
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { name, username },
+      data: { name, username, role },
       emailRedirectTo: `${appUrl}/auth/callback`,
     },
   });
