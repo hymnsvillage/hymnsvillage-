@@ -52,7 +52,7 @@ export default function ManageHymns() {
         <h2 className="text-2xl font-semibold">Manage Hymns</h2>
         <Button onClick={() => router.push('/dashboard/manage-hymns/create')}>
           <Plus className="mr-2 w-4 h-4" />
-          Create Hymn
+          Create hymn
         </Button>
       </div>
 
