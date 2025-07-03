@@ -90,7 +90,7 @@ function Home() {
       {/* <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100"> */}
       <FeaturedHymns />
       <InsightsSection featured={featured} recent={recent} />
-       <AboutUsSection imageSrc={""} topText={""} bottomText={''} />
+       <AboutUsSection  />
     </div>
   )
 }

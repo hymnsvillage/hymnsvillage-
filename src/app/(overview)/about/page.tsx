@@ -94,36 +94,37 @@ const AboutPage = () => {
         <div className="grid md:grid-cols-3 gap-6 text-center">
           {Array(1)
             .fill([
+
               {
-                name: 'Godsam Peter',
+                name: 'Ubong Williams',
                 role: 'Team Lead',
-                img: '/avatar.jpg',
+                img: '/uncleUb.jpg',
               },
               {
-                name: 'Christiana Christopher',
-                role: 'Content Lead',
-                img: '/avatar-2.jpg',
+                name: 'Godsam Peter',
+                role: 'Member',
+                img: '/Godson.jpg',
+              },
+              {
+                name: 'Unyime Essionatanim',
+                role: 'Member',
+                img: '/unyime.jpg',
               },
               
               {
-                name: 'Prof Okodudu Arew',
-                role: 'Advisor',
-                img: '/avatar-1.jpg',
+                name: 'Precious Essiota',
+                role: 'Member',
+                img: '/preciousessiota.jpg',
               },
               {
-                name: 'Prof Okodudu Arew',
-                role: 'Advisor',
-                img: '/avatar-3.jpg',
+                name: 'Owodiong Edem',
+                role: 'Member',
+                img: '/owodiong.jpg',
               },
               {
-                name: 'Prof Okodudu Arew',
-                role: 'Advisor',
-                img: '/avatar-4.jpg',
-              },
-              {
-                name: 'Prof Okodudu Arew',
-                role: 'Advisor',
-                img: '/avatar-1.jpg',
+                name: 'Essionatanim Essioata',
+                role: 'Member',
+                img: '/sultan.jpg',
               },
             ])
             .flat()
