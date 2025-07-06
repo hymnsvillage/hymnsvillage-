@@ -6,6 +6,7 @@
  */
 
 import { createSupabaseServerClient, loginSchema } from "@/app/(backend)/lib";
+import { cleanUser, RawUser } from "@/app/(backend)/lib/cleanUser";
 import { customResponse } from "@/app/(backend)/lib/customResponse";
 import { NextResponse } from "next/server";
 
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   return NextResponse.json(
     customResponse({
-      data: { user: data.user },
+      data: { ...cleanUser(data.user as RawUser) },
       statusCode: 200,
       message: "Login was successful",
     })
