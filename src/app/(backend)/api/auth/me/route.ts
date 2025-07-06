@@ -39,8 +39,21 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const user = data.user;
+
+  const [followers, following] = await Promise.all([
+    supabase
+      .from("followers")
+      .select("*", { count: "exact", head: true })
+      .eq("followed_id", user.id),
+    supabase
+      .from("followers")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", user.id),
+  ]);
+
   return NextResponse.json(
-    customResponse({ statusCode: 200, data: { user: data.user } })
+    customResponse({ data: { user, followers, following } })
   );
 }
 
