@@ -1,10 +1,10 @@
 import {
-    blogInputSchema,
-    blogUpdateSchema,
-    categoryInputSchema,
-    commentInputSchema,
-    searchQuerySchema,
-    tagInputSchema,
+  blogInputSchema,
+  blogUpdateSchema,
+  categoryInputSchema,
+  commentInputSchema,
+  searchQuerySchema,
+  tagInputSchema,
 } from "../schemas/blogSchemas";
 
 export const blogPaths = {
@@ -29,10 +29,26 @@ export const blogPaths = {
   "/api/blog/{id}": {
     get: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Single blog post" } },
     },
     put: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       requestBody: {
         content: {
           "multipart/form-data": { schema: blogUpdateSchema },
@@ -42,6 +58,14 @@ export const blogPaths = {
     },
     delete: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Blog deleted" } },
     },
   },
@@ -63,6 +87,14 @@ export const blogPaths = {
   "/api/blog/category/{id}": {
     put: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       requestBody: {
         content: {
           "application/json": { schema: categoryInputSchema },
@@ -72,6 +104,14 @@ export const blogPaths = {
     },
     delete: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Category deleted" } },
     },
   },
@@ -93,16 +133,40 @@ export const blogPaths = {
   "/api/blog/tag/{id}": {
     delete: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Tag deleted" } },
     },
   },
   "/api/blog/comment/{postId}": {
     get: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "postId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Get comments for post" } },
     },
     post: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "postId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       requestBody: {
         content: {
           "application/json": { schema: commentInputSchema },
@@ -114,6 +178,14 @@ export const blogPaths = {
   "/api/blog/comment/{id}": {
     delete: {
       tags: ["Blog"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: { "200": { description: "Comment deleted" } },
     },
   },

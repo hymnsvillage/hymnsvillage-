@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("blogs")
-    .select("*, blog_categories(*), blog_tags(*), blog_media(*)", {
+    .select("*, blog_categories(*), blog_media(*)", {
       count: "exact",
     })
     .order("created_at", { ascending: false })
@@ -47,14 +47,28 @@ export async function GET(req: NextRequest) {
 
     const hasViewed = !!impressions;
 
-    blogs.push({ ...blog, hasViewed });
+    const tagIds = data.flatMap((blog) => blog.tag_ids || []);
+    const uniqueTagIds = [...new Set(tagIds)];
+
+    const { data: tags } = await supabase
+      .from("blog_tags")
+      .select("*")
+      .in("id", uniqueTagIds);
+
+    blogs.push({
+      ...blog,
+      hasViewed,
+      tags: tags
+        ?.filter((t) => blog.tag_ids?.includes(t.id))
+        ?.map((tag) => tag.name),
+    });
   }
 
   return NextResponse.json(
     customResponse({
       data: {
-        blogs,
         blogInfo: orderResponse({ data: blogs, limit, page }),
+        blogs,
       },
     })
   );
@@ -79,7 +93,15 @@ export async function POST(req: NextRequest) {
   const title = formData.get("title")?.toString() || "";
   const content = formData.get("content")?.toString() || "";
   const categoryId = formData.get("categoryId")?.toString() || "";
-  const tags = JSON.parse(formData.get("tags")?.toString() || "[]");
+  const rawTags = formData.get("tags")?.toString() || "";
+  const tags = [
+    ...new Set(
+      rawTags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    ),
+  ];
 
   const mediaFiles = formData.getAll("media") as unknown as File[];
 
@@ -103,6 +125,7 @@ export async function POST(req: NextRequest) {
       title,
       content,
       category_id: categoryId,
+      tag_ids: tags,
       author_id: user.id,
     })
     .select()
@@ -111,25 +134,16 @@ export async function POST(req: NextRequest) {
   if (blogError)
     return NextResponse.json({ error: blogError.message }, { status: 500 });
 
-  // Attach tags
-  for (const tagId of tags) {
-    await supabase.from("blog_tags").insert({
-      blog_id: blog.id,
-      tag_id: tagId,
-    });
-  }
-
-  // Upload media
   const mediaUrls: string[] = [];
 
   if (mediaFiles) {
     for (const file of mediaFiles) {
       const buffer = Buffer.from(await file?.arrayBuffer());
       const sizeMB = buffer.length / (1024 * 1024);
-      if (sizeMB > 3) continue;
+      if (sizeMB > 10) continue;
 
       const ext = file?.name?.split(".").pop() || "jpg";
-      const filePath = `blog-${blog.id}/${uuidv4()}.${ext}`;
+      const filePath = `${user.id}/${blog.id}/${uuidv4()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("blog-media")
@@ -138,7 +152,11 @@ export async function POST(req: NextRequest) {
           upsert: true,
         });
 
-      if (uploadError) continue;
+      if (uploadError)
+        return NextResponse.json(
+          { error: uploadError.message },
+          { status: 500 }
+        );
 
       const { data: publicUrl } = supabase.storage
         .from("blog-media")
@@ -155,8 +173,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(
     customResponse({
-      data: { blog, media: mediaUrls },
-      message: `${blog.title} created successfully`,
+      data: { ...blog, mediaUrls },
+      message: `${blog.title} was created successfully`,
     })
   );
 }
