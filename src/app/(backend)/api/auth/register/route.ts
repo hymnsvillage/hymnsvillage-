@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   }
 
   const { email, password, name, username, role: userRole } = parsed.data;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,

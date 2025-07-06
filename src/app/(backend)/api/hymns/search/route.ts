@@ -3,7 +3,7 @@ import { hymnSearchSchema } from "@/app/(backend)/schemas/hymnSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const body = await req.json();
 
   const parsed = hymnSearchSchema.safeParse(body);

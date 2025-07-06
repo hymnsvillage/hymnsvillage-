@@ -5,7 +5,7 @@ import {
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("hymn_categories").select("*");
 
   if (error)

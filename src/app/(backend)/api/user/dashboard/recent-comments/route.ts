@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
  * @description Fetch most recent 4-5 comments across user's posts
  */
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

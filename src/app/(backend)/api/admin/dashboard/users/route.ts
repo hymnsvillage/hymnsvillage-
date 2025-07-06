@@ -1,13 +1,12 @@
 import {
   createSupabaseServerClient,
   customResponse,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
 } from "@/app/(backend)/lib";
 import { orderResponse } from "@/app/(backend)/lib/orderResponse";
 import { requireAdmin } from "@/app/(backend)/middlewares/auth";
 import { NextRequest, NextResponse } from "next/server";
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 20;
 
 /**
  * @route GET /api/admin/dashboard/users
@@ -16,7 +15,7 @@ const DEFAULT_LIMIT = 20;
  */
 export async function GET(req: NextRequest) {
   //_: NextRequest
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
     return NextResponse.json({ error: authError }, { status: 403 });

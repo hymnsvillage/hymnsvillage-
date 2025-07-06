@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
  * @access Admin only
  */
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
 
   if (authError) {

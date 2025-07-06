@@ -15,7 +15,7 @@ export async function GET(
   _: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
     return NextResponse.json({ error: authError }, { status: 403 });
@@ -52,7 +52,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
     return NextResponse.json({ error: authError }, { status: 403 });
@@ -94,7 +94,7 @@ export async function DELETE(
   _: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
     return NextResponse.json({ error: authError }, { status: 403 });

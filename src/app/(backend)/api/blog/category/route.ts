@@ -6,7 +6,7 @@ import { categoryInputSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("categories").select("*");
 
   if (error)
@@ -15,10 +15,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  console.log(user?.user_metadata?.role);
 
   if (!user || user.user_metadata?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

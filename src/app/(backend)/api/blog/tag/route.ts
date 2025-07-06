@@ -6,7 +6,7 @@ import { tagInputSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("tags").select("*");
 
   if (error)
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
  * @description Weekly analytics (e.g., impressions/views)
  */
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

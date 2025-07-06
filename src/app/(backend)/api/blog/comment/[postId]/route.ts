@@ -6,7 +6,7 @@ export async function GET(
   _: NextRequest,
   { params }: { params: { postId: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("comments")
     .select("*, users(email)")
@@ -22,7 +22,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { postId: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

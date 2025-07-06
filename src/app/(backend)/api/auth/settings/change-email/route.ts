@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
  * @description Request email change with confirmation link
  */
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

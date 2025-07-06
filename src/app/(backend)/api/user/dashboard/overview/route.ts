@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
  * @access Authenticated users only
  */
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

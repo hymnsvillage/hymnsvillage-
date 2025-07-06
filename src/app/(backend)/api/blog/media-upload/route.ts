@@ -23,7 +23,7 @@ const parseForm = async (req: Request): Promise<File[]> =>
   });
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },

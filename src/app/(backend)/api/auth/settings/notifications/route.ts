@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
  * @description Get current user notification settings
  */
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -32,7 +32,7 @@ export async function GET() {
  * @description Update user notification settings
  */
 export async function PUT(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

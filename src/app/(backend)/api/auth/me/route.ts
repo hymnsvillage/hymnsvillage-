@@ -1,8 +1,7 @@
 import { createSupabaseServerClient } from "@/app/(backend)/lib";
+import { cleanUser, RawUser } from "@/app/(backend)/lib/cleanUser";
 import { customResponse } from "@/app/(backend)/lib/customResponse";
-import { updateMeSchema } from "@/app/(backend)/schemas/profileSchemas";
-import { supabaseClient } from "@/supabase";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
@@ -32,7 +31,7 @@ function getMimeType(buffer: Buffer): string | null {
 }
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
@@ -53,39 +52,40 @@ export async function GET() {
   ]);
 
   return NextResponse.json(
-    customResponse({ data: { user, followers, following } })
+    customResponse({
+      data: { ...cleanUser(user as RawUser), followers, following },
+    })
   );
 }
 
-export async function PUT(req: Request) {
-  const supabase = supabaseClient.supabase;
+export async function PUT(req: NextRequest) {
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const parsed = updateMeSchema.safeParse(body);
-  if (!parsed.success)
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 }
-    );
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const formData = await req.formData();
+
+  const name = formData.get("name")?.toString();
+  const userRole = formData.get("userRole")?.toString();
+  const avatarFile = formData.get("avatar") as File | null;
 
   let avatarUrl: string | undefined;
-  if (parsed.data.avatarFile) {
-    const buffer = Buffer.from(parsed.data.avatarFile, "base64");
 
-    // File size validation
-    if (buffer.length > MAX_FILE_SIZE) {
+  if (avatarFile) {
+    const buffer = Buffer.from(await avatarFile.arrayBuffer());
+    const sizeMB = buffer.length / (1024 * 1024);
+    if (sizeMB > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Avatar file size must be less than 3MB." },
+        { error: "Avatar file must be less than 3MB" },
         { status: 400 }
       );
     }
 
-    // File type validation
     const mimeType = getMimeType(buffer);
     if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType)) {
       return NextResponse.json(
@@ -98,28 +98,53 @@ export async function PUT(req: Request) {
     }
 
     const ext = mimeType.split("/")[1];
-    const path = `avatars/${user.id}/${uuidv4()}.${ext}`;
-    const { error: upErr } = await supabase.storage
+    const path = `${user.id}/${uuidv4()}.${ext}`;
+
+    const existingAvatarUrl = user.user_metadata?.avatarUrl;
+    if (
+      existingAvatarUrl?.includes(
+        "supabase.co/storage/v1/object/public/avatars"
+      )
+    ) {
+      const url = new URL(existingAvatarUrl);
+      const pathToDelete = url.pathname.split("/avatars/")[1]; // get path after /avatars/
+
+      if (pathToDelete) {
+        await supabase.storage.from("avatars").remove([pathToDelete]);
+      }
+    }
+
+    const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(path, buffer, { contentType: mimeType });
-    if (upErr)
-      return NextResponse.json({ error: upErr.message }, { status: 500 });
+      .upload(path, buffer, {
+        contentType: mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
+
     const { data: publicUrl } = supabase.storage
       .from("avatars")
       .getPublicUrl(path);
+
     avatarUrl = publicUrl.publicUrl;
   }
 
+  // Construct profile update object
   const updateData: Record<string, unknown> = {};
-  if (parsed.data.name) updateData.name = parsed.data.name;
-  if (avatarUrl) updateData.avatar_url = avatarUrl;
+  if (name) updateData.name = name;
+  if (userRole) updateData.userRole = userRole;
+  if (avatarUrl) updateData.avatarUrl = avatarUrl;
 
-  const { error: profErr } = await supabase
-    .from("profiles")
-    .update(updateData)
-    .eq("id", user.id);
-  if (profErr)
-    return NextResponse.json({ error: profErr.message }, { status: 500 });
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: updateData,
+  });
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
 
   return NextResponse.json(
     customResponse({

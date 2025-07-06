@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
  * @description Sends an email verification link to the current user
  */
 export async function POST() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -16,10 +16,10 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { error } = await supabase.auth.resend({
-      type: "signup",
+    type: "signup",
     email: user.email,
     options: {
-        emailRedirectTo: appUrl + "/auth/verify",
+      emailRedirectTo: appUrl + "/auth/verify",
     },
   });
 

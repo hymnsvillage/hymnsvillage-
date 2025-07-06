@@ -1,49 +1,64 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { File, IncomingForm } from "formidable";
-import { readFile } from "fs/promises";
+import { File } from "buffer";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { createSupabaseServerClient, customResponse } from "../../lib";
+import {
+  createSupabaseServerClient,
+  customResponse,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from "../../lib";
+import { orderResponse } from "../../lib/orderResponse";
 import { blogInputSchema } from "../../schemas/blogSchemas";
 
-export async function GET() {
-  const supabase = createSupabaseServerClient();
+export async function GET(req: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+
+  const { data: user } = await supabase.auth.getUser();
+
+  const { searchParams } = new URL(req.url);
+
+  const page = parseInt(searchParams.get("page") || `${DEFAULT_PAGE}`, 10);
+  const limit = parseInt(searchParams.get("limit") || `${DEFAULT_LIMIT}`, 10);
+  const offset = (page - 1) * limit;
 
   const { data, error } = await supabase
     .from("blogs")
-    .select("*, categories(*), tags(*)")
-    .order("created_at", { ascending: false });
+    .select("*, blog_categories(*), blog_tags(*), blog_media(*)", {
+      count: "exact",
+    })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json(customResponse({ data: { blogs: data } }));
+  const blogs = [];
+
+  for (let index = 0; index < data.length; index++) {
+    const blog = data[index];
+
+    const { data: impressions } = await supabase
+      .from("impressions")
+      .select("id")
+      .eq("target_type", "blog")
+      .eq("target_id", blog.id)
+      .eq("viewer_id", user.user?.id || "")
+      .maybeSingle();
+
+    const hasViewed = !!impressions;
+
+    blogs.push({ ...blog, hasViewed });
+  }
+
+  return NextResponse.json(
+    customResponse({
+      data: {
+        blogs,
+        blogInfo: orderResponse({ data: blogs, limit, page }),
+      },
+    })
+  );
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-const parseForm = async (
-  req: Request
-): Promise<{
-  fields: Record<string, any>;
-  files: File[];
-}> =>
-  new Promise((resolve, reject) => {
-    const form = new IncomingForm({ multiples: true, maxFiles: 10 });
-    form.parse(req as any, (err, fields, files) => {
-      if (err) reject(err);
-      const mediaFiles = Array.isArray(files.media)
-        ? files.media
-        : files.media
-        ? [files.media]
-        : [];
-      resolve({ fields, files: mediaFiles });
-    });
-  });
 
 /**
  * @route POST /api/blog
@@ -51,24 +66,30 @@ const parseForm = async (
  * @access Authenticated users only
  */
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
-  const { fields, files } = await parseForm(req);
+  const formData = await req.formData();
 
-  // Tags come as a JSON string array
-  const input = {
-    ...fields,
-    tags: JSON.parse(fields.tags || "[]"),
-  };
+  const title = formData.get("title")?.toString() || "";
+  const content = formData.get("content")?.toString() || "";
+  const categoryId = formData.get("categoryId")?.toString() || "";
+  const tags = JSON.parse(formData.get("tags")?.toString() || "[]");
 
-  const parsed = blogInputSchema.safeParse(input);
+  const mediaFiles = formData.getAll("media") as unknown as File[];
+
+  const parsed = blogInputSchema.safeParse({
+    title,
+    content,
+    categoryId,
+    tags,
+  });
+
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -76,20 +97,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { title, content, categoryId, tags } = parsed.data;
-
-  // Create the blog
   const { data: blog, error: blogError } = await supabase
     .from("blogs")
-    .insert({ title, content, category_id: categoryId, author_id: user.id })
+    .insert({
+      title,
+      content,
+      category_id: categoryId,
+      author_id: user.id,
+    })
     .select()
     .single();
 
-  if (blogError) {
+  if (blogError)
     return NextResponse.json({ error: blogError.message }, { status: 500 });
-  }
 
-  // Add tags
+  // Attach tags
   for (const tagId of tags) {
     await supabase.from("blog_tags").insert({
       blog_id: blog.id,
@@ -97,42 +119,44 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Upload media files
+  // Upload media
   const mediaUrls: string[] = [];
 
-  for (const file of files) {
-    const buffer = await readFile(file.filepath);
-    const sizeMB = buffer.length / (1024 * 1024);
-    if (sizeMB > 3) continue;
+  if (mediaFiles) {
+    for (const file of mediaFiles) {
+      const buffer = Buffer.from(await file?.arrayBuffer());
+      const sizeMB = buffer.length / (1024 * 1024);
+      if (sizeMB > 3) continue;
 
-    const ext = file.originalFilename?.split(".").pop() || "jpg";
-    const filePath = `blog-${blog.id}/${uuidv4()}.${ext}`;
+      const ext = file?.name?.split(".").pop() || "jpg";
+      const filePath = `blog-${blog.id}/${uuidv4()}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("blog-media")
-      .upload(filePath, buffer, {
-        contentType: file.mimetype || "image/jpeg",
-        upsert: true,
+      const { error: uploadError } = await supabase.storage
+        .from("blog-media")
+        .upload(filePath, buffer, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadError) continue;
+
+      const { data: publicUrl } = supabase.storage
+        .from("blog-media")
+        .getPublicUrl(filePath);
+
+      mediaUrls.push(publicUrl.publicUrl);
+
+      await supabase.from("blog_media").insert({
+        blog_id: blog.id,
+        url: publicUrl.publicUrl,
       });
-
-    if (uploadError) continue;
-
-    const { data: publicUrl } = supabase.storage
-      .from("blog-media")
-      .getPublicUrl(filePath);
-
-    mediaUrls.push(publicUrl.publicUrl);
-
-    await supabase.from("blog_media").insert({
-      blog_id: blog.id,
-      url: publicUrl.publicUrl,
-    });
+    }
   }
 
   return NextResponse.json(
     customResponse({
       data: { blog, media: mediaUrls },
-      message: `${blog.title} created with ${mediaUrls.length} image(s)`,
+      message: `${blog.title} created successfully`,
     })
   );
 }
