@@ -15,6 +15,8 @@ import CodeBlock from '@tiptap/extension-code-block';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Blockquote from '@tiptap/extension-blockquote';
 import HardBreak from '@tiptap/extension-hard-break';
+import Heading from '@tiptap/extension-heading'; 
+
 
 import { SuggestionOptions } from '@tiptap/suggestion';
 import NextImage from 'next/image';
@@ -92,11 +94,12 @@ const RichTextEditor = () => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ codeBlock: false, hardBreak: false }),
+      Heading.configure({ levels: [1, 2, 3] }), // ✅ ADDED THIS
       CodeBlock,
       Underline,
       Youtube.configure({ width: 640, height: 360 }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      CharacterCount.configure({ limit: 35000 }), // ~7000 words
+      CharacterCount.configure({ limit: 35000 }),
       Mention.configure({
         HTMLAttributes: { class: 'mention text-blue-500 font-semibold' },
         suggestion: mentionSuggestion,
@@ -167,20 +170,20 @@ const RichTextEditor = () => {
             <label className="block font-medium mb-2">Select Featured Image</label>
             <div
               className="w-full h-40 border border-dashed border-gray-400 rounded-md relative cursor-pointer overflow-hidden bg-gray-50 hover:bg-gray-100"
-               onClick={() => fileInputRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm z-0">
-                     <ImageIcon className="mb-1" />
-                     Click to choose image
-                </div>
-                <input
-                    type="file"
-                     accept="image/*"
-                     ref={fileInputRef}
-                     onChange={handleImageUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                />
-               </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm z-0">
+                <ImageIcon className="mb-1" />
+                Click to choose image
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+            </div>
             {featuredImage && (
               <div className="mt-4">
                 <NextImage
@@ -192,11 +195,11 @@ const RichTextEditor = () => {
                 />
                 <input
                   type="text"
-                   placeholder="Alt text for image"
-                   value={altText}
+                  placeholder="Alt text for image"
+                  value={altText}
                   onChange={(e) => setAltText(e.target.value)}
                   className="mt-2 w-full border rounded-md p-2 text-sm"
-                   />
+                />
               </div>
             )}
           </div>
