@@ -27,15 +27,15 @@ export const loginSchema = z
 export const updateProfileSchema = z
   .object({
     name: z.string().min(1).optional().openapi({ example: "Clever" }),
-    avatar_url: z
-      .string()
-      .url()
+    userRole: z.string().min(1).optional().openapi({ example: "user" }),
+    avatar: z
+      .instanceof(File)
       .optional()
-      .openapi({ example: "https://cdn.site.com/avatar.png" }),
+      .openapi({ type: "string", format: "binary", example: undefined }),
   })
   .openapi({
     ref: "UpdateProfilePayload",
-    description: "Update name or avatar",
+    description: "Update user information",
   });
 
 export const forgotPasswordSchema = z
