@@ -43,3 +43,4 @@ return NextResponse.json(
     message: "Login was successful",
   })
 );
+}
