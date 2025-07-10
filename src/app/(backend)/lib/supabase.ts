@@ -1,9 +1,19 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies as getCookies } from "next/headers";
+import { cookies as getCookies, getCookies as getCookiesAsync } from "next/headers";
 
-export async function createSupabaseServerClient() {
-  return createRouteHandlerClient({ 
-    cookies: () => Promise.resolve(getCookies())
-  });
-}
-// export const supabase = await createSupabaseServerClient();
+// Unified version: supports both sync and async contexts
+export const createSupabaseServerClient = async () => {
+  try {
+    // Try sync cookies() (works in route handlers and middleware)
+    const cookieStore = getCookies(); // call cookies()
+    return createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
+  } catch (err) {
+    // Fallback to async getCookies() if cookies() fails (e.g. in edge environments)
+    const cookieStore = await getCookiesAsync();
+    return createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
+  }
+};

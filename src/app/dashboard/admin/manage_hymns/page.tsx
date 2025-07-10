@@ -23,17 +23,16 @@ type Hymn = {
 export default function ManageHymns() {
   const [hymns, setHymns] = useState<Hymn[]>([])
   const router = useRouter()
-
- useEffect(() => {
-  const fetchHymns = async () => {
-    const { data, error } = await supabase.from('hymns').select('*')
-    console.log('Fetched hymns:', data)
-    console.log('Supabase error:', error)
-    setHymns(data || [])
+useEffect(() => {
+  async function fetchHymns() {
+     
+    const { data } = await supabase.from('hymns').select('*');
+    console.log('Fetched hymns:', data);
+    setHymns(data || []);
   }
 
-  fetchHymns()
-}, [])
+  fetchHymns();
+}, []);
 
 
   const handleDelete = async (id: number) => {
@@ -50,7 +49,7 @@ export default function ManageHymns() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold">Manage Hymns</h2>
-        <Button onClick={() => router.push('/dashboard/manage-hymns/create')}>
+        <Button onClick={() => router.push('/dashboard/admin/manage_hymns/create')}>
           <Plus className="mr-2 w-4 h-4" />
           Create hymn
         </Button>

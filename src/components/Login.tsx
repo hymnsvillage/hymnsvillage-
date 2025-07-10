@@ -21,6 +21,7 @@ type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
+
   const {
     register,
     reset,
@@ -31,16 +32,31 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    const result = await loginUser(data);
-    if (result.data.success) {
-      reset();
-      router.push("/");
-      toast.success(result.data.message);
+    try {
+      const result = await loginUser(data);
+
+      if (result?.data?.success) {
+        toast.success(result.data.message || "Login successful");
+        reset();
+
+        const user = result.data.user;
+
+        if (user?.role === "admin") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/dashboard/user"); // or "/"
+        }
+      } else {
+        toast.error(result.data?.error || "Login failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Unexpected error. Please try again later.");
     }
   };
 
   return (
-    <div className="">
+    <div>
       <div className="space-y-2 mb-6 mt-4">
         <h2 className="text-gray-800 text-2xl font-bold">Enter the Village</h2>
         <p className="text-sm text-gray-500">
@@ -51,10 +67,7 @@ export default function LoginForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
         {/* Email Field */}
         <div>
-          <label
-            htmlFor="email"
-            className="text-sm font-medium block text-gray-700"
-          >
+          <label htmlFor="email" className="text-sm font-medium block text-gray-700">
             Email:
           </label>
           <input
@@ -70,15 +83,12 @@ export default function LoginForm() {
 
         {/* Password Field */}
         <div>
-          <label
-            htmlFor="password"
-            className="text-sm font-medium block text-gray-700"
-          >
+          <label htmlFor="password" className="text-sm font-medium block text-gray-700">
             Password:
           </label>
           <input
             type="password"
-            placeholder="At least 8 character"
+            placeholder="At least 8 characters"
             className="w-full p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
             {...register("password")}
           />
@@ -89,24 +99,28 @@ export default function LoginForm() {
           )}
         </div>
 
+        {/* Forgot password */}
         <div className="flex justify-end">
-          <Link href="#" className="text-sm text-gray-700 hover:underline">
-            Forgotten password
+          <Link href="/forgot-password" className="text-sm text-gray-700 hover:underline">
+            Forgotten password?
           </Link>
         </div>
 
+        {/* Submit */}
         <button
           disabled={isSubmitting}
           type="submit"
           className="w-full capitalize bg-black text-white py-3 rounded-md hover:opacity-90 transition"
         >
-          {isSubmitting ? "Logging in" : "  Log in →"}
+          {isSubmitting ? "Logging in..." : "Log in →"}
         </button>
 
+        {/* Divider */}
         <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
           <span>or</span>
         </div>
 
+        {/* Google Login */}
         <button
           type="button"
           className="w-full flex items-center justify-center gap-2 border py-2 text-gray-700 rounded-md hover:bg-gray-100 transition"
@@ -120,12 +134,10 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
+        {/* Signup Link */}
         <p className="text-sm text-center text-gray-700">
           Don’t have an account?{" "}
-          <Link
-            href="/signup"
-            className="capitalize text-[#DC4407] font-semibold hover:underline"
-          >
+          <Link href="/signup" className="capitalize text-[#DC4407] font-semibold hover:underline">
             Sign up
           </Link>
         </p>

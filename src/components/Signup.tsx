@@ -2,7 +2,7 @@
 
 import { registerUser } from "@/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react"; // icons
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,10 +14,10 @@ import { z } from "zod";
 // Validation schema
 const signupSchema = z
   .object({
-    firstName: z.string().min(1, "Name is required"),
-    lastName: z.string().min(1, "last name required"),
-    username: z.string().min(1, "user name is required"),
-    email: z.string().email("Invalid email"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    username: z.string().min(1, "Username is required"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
     agree: z.literal(true, {
@@ -53,25 +53,34 @@ export default function SignupForm() {
     firstName,
     lastName,
   }: SignupFormValues) => {
-    const result = await registerUser({
-      email,
-      name: `${firstName} ${lastName}`,
-      username,
-      password,
-      role: "user",
-    });
+    try {
+      const result = await registerUser({
+        email,
+        name: `${firstName} ${lastName}`,
+        username,
+        password,
+        role: "user",
+      });
 
-    if (result.data.success) {
-      reset();
-      setSuccessMessage(
-        result.data.message || "Registration was successful. Please login"
+      if (result.data.success) {
+        reset();
+        setSuccessMessage(
+          result.data.message || "Registration was successful. Please log in."
+        );
+        toast.success(result.data.message || "Registration successful");
+        router.push("/login");
+      } else {
+        toast.error(
+          result.data.error || "An error occurred. Please try again."
+        );
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+          "Server error. Please try again later."
       );
-      router.push("/login");
     }
-    toast.error(
-      result.data.error ||
-        "An error occurred during registration. Please try again"
-    );
   };
 
   return (
@@ -86,12 +95,9 @@ export default function SignupForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
-        {/* Name */}
+        {/* First Name */}
         <div className="relative">
-          <User
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             placeholder="Please Enter Your First Name"
@@ -103,14 +109,12 @@ export default function SignupForm() {
           )}
         </div>
 
+        {/* Last Name */}
         <div className="relative">
-          <User
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder=" Enter Your Last Name"
+            placeholder="Enter Your Last Name"
             className="w-full pl-10 p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
             {...register("lastName")}
           />
@@ -119,14 +123,12 @@ export default function SignupForm() {
           )}
         </div>
 
+        {/* Username */}
         <div className="relative">
-          <User
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder=" Enter Your User Name"
+            placeholder="Enter Your Username"
             className="w-full pl-10 p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
             {...register("username")}
           />
@@ -137,13 +139,10 @@ export default function SignupForm() {
 
         {/* Email */}
         <div className="relative">
-          <Mail
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="email"
-            placeholder="e.g Example@mail.com"
+            placeholder="e.g. Example@mail.com"
             className="w-full pl-10 p-3 text-gray-700 placeholder:text-gray-300 border rounded-md"
             {...register("email")}
           />
@@ -154,10 +153,7 @@ export default function SignupForm() {
 
         {/* Password */}
         <div className="relative">
-          <Lock
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="At least 8 characters"
@@ -178,10 +174,7 @@ export default function SignupForm() {
 
         {/* Confirm Password */}
         <div className="relative">
-          <Lock
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type={showConfirm ? "text" : "password"}
             placeholder="Make sure password is the same"
@@ -196,13 +189,11 @@ export default function SignupForm() {
             {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
           {errors.confirmPassword && (
-            <p className="text-sm text-red-500">
-              {errors.confirmPassword.message}
-            </p>
+            <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
           )}
         </div>
 
-        {/* Terms */}
+        {/* Terms Agreement */}
         <div className="flex items-center space-x-2">
           <input type="checkbox" {...register("agree")} />
           <label htmlFor="agree" className="text-sm">
@@ -213,7 +204,7 @@ export default function SignupForm() {
           <p className="text-sm text-red-500">{errors.agree.message}</p>
         )}
 
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           disabled={isSubmitting}
           type="submit"
@@ -223,9 +214,7 @@ export default function SignupForm() {
         </button>
 
         {successMessage && (
-          <p className="text-center text-green-600 font-medium">
-            {successMessage}
-          </p>
+          <p className="text-center text-green-600 font-medium">{successMessage}</p>
         )}
 
         {/* Divider */}
@@ -233,10 +222,11 @@ export default function SignupForm() {
           <span>or</span>
         </div>
 
-        {/* Google Auth */}
+        {/* Google Auth (disabled for now) */}
         <button
           type="button"
           className="w-full flex items-center justify-center gap-2 border py-2 text-gray-700 rounded-md hover:bg-gray-100"
+          disabled
         >
           <Image
             src="/google-icon.png"
@@ -250,10 +240,7 @@ export default function SignupForm() {
         {/* Login Link */}
         <p className="text-sm text-center text-gray-700">
           Already have an account?{" "}
-          <Link
-            href="/login"
-            className="capitalize text-[#DC4407] font-semibold hover:underline"
-          >
+          <Link href="/login" className="text-[#DC4407] font-semibold hover:underline">
             Log in
           </Link>
         </p>
