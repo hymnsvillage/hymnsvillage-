@@ -18,7 +18,7 @@ const navItems = [
   { label: "Hymns", icon: Music, href: "/dashboard/user/hymns" },
   { label: "Profile", icon: User, href: "/dashboard/user/profile" },
   { label: "Settings", icon: Settings, href: "/dashboard/user/settings" },
-  { label: "Log Out", icon: LogOut, href: "/logout" },
+  { label: "Log Out", icon: LogOut, href: "/dashboard/user/logout" },
 ];
 
 export default function UserSidebar() {
