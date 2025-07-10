@@ -1,4 +1,7 @@
-import { createSupabaseServerClient } from "@/app/(backend)/lib";
+import {
+  createSupabaseServerClient,
+  customResponse,
+} from "@/app/(backend)/lib";
 import { hymnUpdateSchema } from "@/app/(backend)/schemas/hymnSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,23 +9,36 @@ export async function GET(
   _: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("hymns")
-    .select("*, categories(*)")
-    .eq("id", params.id)
-    .single();
+  const supabase = await createSupabaseServerClient();
+  const { data: user } = await supabase.auth.getUser();
+
+  const [{ data, error }, { data: impressions }] = await Promise.all([
+    supabase
+      .from("hymns")
+      .select("*, categories(*)")
+      .eq("id", params.id)
+      .single(),
+    supabase
+      .from("impressions")
+      .select("id")
+      .eq("target_type", "hymn")
+      .eq("target_id", params.id)
+      .eq("viewer_id", user.user?.id || "")
+      .maybeSingle(),
+  ]);
+
+  const hasViewed = !!impressions;
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 404 });
-  return NextResponse.json({ hymn: data });
+  return NextResponse.json(customResponse({ data: { ...data, hasViewed } }));
 }
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -56,7 +72,7 @@ export async function DELETE(
   _: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

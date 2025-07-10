@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const AboutUsSection = () => {
   const router = useRouter();
@@ -15,7 +15,7 @@ const AboutUsSection = () => {
       {/* Top White Banner */}
       <div className="absolute top-0 left-0 right-0 z-30 bg-white text-black px-8 py-4 flex md:flex-row justify-between items-center md:items-center gap-4 md:gap-0">
         <h2 className="text-xl font-semibold">About us</h2>
-        <button 
+        <button
           onClick={handleLearnMore}
           className="text-[16px] border border-black rounded-full px-5 py-2 text-black text-sm hover:bg-black hover:text-white transition-colors duration-300"
         >
@@ -25,7 +25,7 @@ const AboutUsSection = () => {
 
       {/* Background image */}
       <Image
-        src="/frame-1mg.jpg" // Replace with your own image path in /public
+        src="/frame-1mg.jpg"
         alt="About background"
         layout="fill"
         objectFit="cover"
@@ -39,7 +39,8 @@ const AboutUsSection = () => {
       {/* Top-left paragraph */}
       <div className="absolute top-28 left-8 max-w-md z-20">
         <p className="text-sm md:text-base leading-relaxed">
-          Looking for a one-stop channel with loads of soul-lifting and classical hymns cutting across various climes and times?
+          Looking for a one-stop channel with loads of soul-lifting and
+          classical hymns cutting across various climes and times?
           <br />
           Search no further, for you are in the right place.
         </p>
@@ -48,9 +49,13 @@ const AboutUsSection = () => {
       {/* Bottom-right paragraph */}
       <div className="absolute bottom-12 right-8 max-w-md text-right z-20">
         <p className="text-sm md:text-base leading-relaxed">
-          At Hymns village you get to find an array of life-changing contents and transforming hymns — for thanksgiving, praise, worship, or whatever phase of life you’re in — all delivered through a melodious voice.
+          At Hymns village you get to find an array of life-changing contents
+          and transforming hymns — for thanksgiving, praise, worship, or
+          whatever phase of life you’re in — all delivered through a melodious
+          voice.
           <br />
-          With our thousands of streams across various platforms, we are undoubtedly doing the Lord’s work of soul-winning.
+          With our thousands of streams across various platforms, we are
+          undoubtedly doing the Lord’s work of soul-winning.
         </p>
       </div>
     </section>

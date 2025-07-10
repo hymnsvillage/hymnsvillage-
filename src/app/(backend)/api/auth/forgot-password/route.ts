@@ -5,11 +5,15 @@
  * @returns {400 | 500} Validation or Supabase error
  */
 
-import { forgotPasswordSchema } from "@/app/(backend)/lib";
-import { appUrl, supabaseClient } from "@/supabase";
+import {
+  createSupabaseServerClient,
+  forgotPasswordSchema,
+} from "@/app/(backend)/lib";
+import { appUrl } from "@/supabase";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  const supabase = await createSupabaseServerClient();
   const body = await req.json();
   const parsed = forgotPasswordSchema.safeParse(body);
 
@@ -22,12 +26,9 @@ export async function POST(req: Request) {
 
   const { email } = parsed.data;
 
-  const { error } = await supabaseClient.supabase.auth.resetPasswordForEmail(
-    email,
-    {
-      redirectTo: `${appUrl}/auth/reset`,
-    }
-  );
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/auth/reset`,
+  });
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });

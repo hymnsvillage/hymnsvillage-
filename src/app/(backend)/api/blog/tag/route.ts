@@ -2,12 +2,13 @@ import {
   createSupabaseServerClient,
   customResponse,
 } from "@/app/(backend)/lib";
+import { cleanUser, RawUser } from "@/app/(backend)/lib/cleanUser";
 import { tagInputSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.from("tags").select("*");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("blog_tags").select("*");
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -15,12 +16,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || user.user_metadata?.role !== "admin") {
+  if (!user || cleanUser(user as RawUser)?.userRole !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { data, error } = await supabase
-    .from("tags")
+    .from("blog_tags")
     .insert(parsed.data)
     .select()
     .single();

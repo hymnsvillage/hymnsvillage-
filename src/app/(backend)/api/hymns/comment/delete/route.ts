@@ -5,7 +5,7 @@ export async function DELETE(
   _: NextRequest,
   { params }: { params: { commentId: string } }
 ) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
