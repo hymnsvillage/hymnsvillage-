@@ -13,7 +13,10 @@ export const hymnCreateSchema = z
     language: z.enum(["English", "Ibibio", "Efik"]).openapi({
       example: "Ibibio",
     }),
-    category_id: z.string().uuid().openapi({ example: "uuid-of-category" }),
+    category_id: z
+      .string()
+      .uuid()
+      .openapi({ example: "76aaca9a-b13e-42e6-9a8a-a966b85787c5" }),
     audio_url: z
       .instanceof(File)
       .optional()
