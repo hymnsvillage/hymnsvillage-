@@ -1,10 +1,13 @@
 import {
-    forgotPasswordSchema,
-    loginSchema,
-    registerSchema,
-    updateProfileSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  updateProfileSchema,
 } from "@/app/(backend)/lib";
-import { changeEmailSchema, notificationSchema } from "../schemas/settingsSchemas";
+import {
+  changeEmailSchema,
+  notificationSchema,
+} from "../schemas/settingsSchemas";
 
 export const authPaths = {
   "/api/auth/register": {
@@ -15,6 +18,15 @@ export const authPaths = {
       },
       responses: {
         "200": { description: "User registered" },
+        "400": { description: "Validation failed" },
+      },
+    },
+  },
+  "/api/auth/oauth/google": {
+    post: {
+      tags: ["Auth"],
+      responses: {
+        "200": { description: "Google auth initialized" },
         "400": { description: "Validation failed" },
       },
     },

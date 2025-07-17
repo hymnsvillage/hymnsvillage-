@@ -19,7 +19,7 @@ export async function GET(
     );
   }
 
-  const supabase = createSupabaseServerClient()
+  const supabase = createSupabaseServerClient();
 
   const {
     data: { url },

@@ -22,25 +22,24 @@ export async function POST(req: Request) {
     );
   }
 
- const { email, password } = parsed.data;
+  const { email, password } = parsed.data;
 
-// ✅ AWAIT this
-const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
-const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-});
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-if (error) {
-  return NextResponse.json({ error: error.message }, { status: 401 });
-}
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 401 });
+  }
 
-return NextResponse.json(
-  customResponse({
-    data: { ...cleanUser(data.user as RawUser) },
-    statusCode: 200,
-    message: "Login was successful",
-  })
-);
+  return NextResponse.json(
+    customResponse({
+      data: { ...cleanUser(data.user as RawUser) },
+      statusCode: 200,
+      message: "Login was successful",
+    })
+  );
 }
