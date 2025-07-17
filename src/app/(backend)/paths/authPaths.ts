@@ -23,7 +23,7 @@ export const authPaths = {
     },
   },
   "/api/auth/oauth/google": {
-    post: {
+    get: {
       tags: ["Auth"],
       responses: {
         "200": { description: "Google auth initialized" },
