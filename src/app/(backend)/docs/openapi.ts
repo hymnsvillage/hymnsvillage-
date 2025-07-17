@@ -24,7 +24,7 @@ export const openApiDocument = createDocument({
   tags: [
     { name: "Auth", description: "Authentication and user account management" },
     { name: "Blog", description: "Blog posts, categories, tags, and comments" },
-    { name: "Hymns", description: "Hymn CRUD, search, and media" },
+    { name: "Hymn", description: "Hymn CRUD, search, and media" },
     { name: "User", description: "Follow/unfollow and user dashboards" },
     { name: "Analytics", description: "Tracking blog and hymn views" },
     {

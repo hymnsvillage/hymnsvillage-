@@ -14,6 +14,14 @@ export const hymnCreateSchema = z
       example: "Ibibio",
     }),
     category_id: z.string().uuid().openapi({ example: "uuid-of-category" }),
+    audio_url: z
+      .instanceof(File)
+      .optional()
+      .openapi({ type: "string", format: "binary", example: undefined }),
+    video_url: z
+      .instanceof(File)
+      .optional()
+      .openapi({ type: "string", format: "binary", example: undefined }),
   })
   .openapi({ ref: "HymnCreate", description: "Create a new hymn" });
 

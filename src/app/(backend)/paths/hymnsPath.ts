@@ -1,7 +1,8 @@
+import { categoryInputSchema } from "../schemas/blogSchemas";
 import {
-    hymnCreateSchema,
-    hymnSearchSchema,
-    hymnUpdateSchema,
+  hymnCreateSchema,
+  hymnSearchSchema,
+  hymnUpdateSchema,
 } from "../schemas/hymnSchemas";
 
 export const hymnPaths = {
@@ -13,7 +14,7 @@ export const hymnPaths = {
     post: {
       tags: ["Hymn"],
       requestBody: {
-        content: { "application/json": { schema: hymnCreateSchema } },
+        content: { "multipart/form-data": { schema: hymnCreateSchema } },
       },
       responses: {
         "200": { description: "Hymn created" },
@@ -56,12 +57,54 @@ export const hymnPaths = {
       responses: { "200": { description: "Filtered hymns" } },
     },
   },
+
   "/api/hymn/categories": {
     get: {
       tags: ["Hymn"],
       responses: { "200": { description: "List of hymn categories" } },
     },
+    post: {
+      tags: ["Hymn"],
+      requestBody: {
+        content: {
+          "application/json": { schema: categoryInputSchema },
+        },
+      },
+      responses: { "200": { description: "Category created" } },
+    },
   },
+  "/api/hymn/category/{id}": {
+    put: {
+      tags: ["Hymn"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        content: {
+          "application/json": { schema: categoryInputSchema },
+        },
+      },
+      responses: { "200": { description: "Category updated" } },
+    },
+    delete: {
+      tags: ["Hymn"],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: { "200": { description: "Category deleted" } },
+    },
+  },
+
   "/api/hymn/by-category": {
     get: {
       tags: ["Hymn"],

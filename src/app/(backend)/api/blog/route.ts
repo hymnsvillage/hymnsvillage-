@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("blogs")
-    .select("*, blog_categories(*), blog_media(*)", {
+    .select("*, blog_categories(name), blog_media(url)", {
       count: "exact",
     })
     .order("created_at", { ascending: false })
@@ -34,26 +34,34 @@ export async function GET(req: NextRequest) {
 
   const blogs = [];
 
-  for (let index = 0; index < data.length; index++) {
-    const blog = data[index];
+  // Collect all unique tag IDs from all blogs
+  const tagIds = data.flatMap((blog) => blog.tag_ids || []);
+  const uniqueTagIds = [...new Set(tagIds)];
 
-    const { data: impressions } = await supabase
+  // Fetch all tags in one query
+  const { data: tags = [] } = await supabase
+    .from("blog_tags")
+    .select("*")
+    .in("id", uniqueTagIds);
+
+  // Prepare impression checks concurrently
+  const impressionPromises = data.map((blog) =>
+    supabase
       .from("impressions")
       .select("id")
       .eq("target_type", "blog")
       .eq("target_id", blog.id)
       .eq("viewer_id", user.user?.id || "")
-      .maybeSingle();
+      .maybeSingle()
+  );
 
+  const impressionResults = await Promise.all(impressionPromises);
+
+  // Build blogs array
+  for (let index = 0; index < data.length; index++) {
+    const blog = data[index];
+    const impressions = impressionResults[index].data;
     const hasViewed = !!impressions;
-
-    const tagIds = data.flatMap((blog) => blog.tag_ids || []);
-    const uniqueTagIds = [...new Set(tagIds)];
-
-    const { data: tags } = await supabase
-      .from("blog_tags")
-      .select("*")
-      .in("id", uniqueTagIds);
 
     blogs.push({
       ...blog,
@@ -67,7 +75,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     customResponse({
       data: {
-        blogInfo: orderResponse({ data: blogs, limit, page }),
+        ...orderResponse({ data: blogs, limit, page }),
         blogs,
       },
     })
@@ -152,11 +160,13 @@ export async function POST(req: NextRequest) {
           upsert: true,
         });
 
-      if (uploadError)
+      if (uploadError) {
+        await supabase.from("blogs").delete().eq("id", blog.id);
         return NextResponse.json(
           { error: uploadError.message },
           { status: 500 }
         );
+      }
 
       const { data: publicUrl } = supabase.storage
         .from("blog-media")
