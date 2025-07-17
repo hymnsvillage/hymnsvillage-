@@ -27,7 +27,10 @@ export async function POST(req: NextRequest) {
   });
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Sorry! we couldn't follow that user" },
+      { status: 500 }
+    );
 
   return NextResponse.json(
     customResponse({ message: "User followed successfully" })
