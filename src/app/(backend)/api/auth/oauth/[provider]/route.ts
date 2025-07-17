@@ -32,6 +32,5 @@ export async function GET(
   if (error || !url)
     return NextResponse.json({ error: error?.message }, { status: 400 });
 
-  console.log({ url });
   return NextResponse.redirect(url);
 }
