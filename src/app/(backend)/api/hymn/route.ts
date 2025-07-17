@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("hymns")
-    .select("*, hymn_categories(*), hymn_media(*)")
+    .select("*, hymn_categories(*), hymn_media(id, url, type)")
     .order("number", { ascending: true })
     .range(offset, offset + limit - 1);
 
@@ -59,17 +59,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { user },error:userError
+    data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: userError?.message }, { status: 500 });
   }
   if (cleanUser(user as RawUser)?.userRole !== "admin") {
-    return NextResponse.json(
-      { error: "Admin access only" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Admin access only" }, { status: 403 });
   }
 
   const formData = await req.formData();
@@ -87,7 +85,7 @@ export async function POST(req: NextRequest) {
     author,
     number,
     language,
-    category_id
+    category_id,
   });
 
   if (!parsed.success) {
@@ -124,11 +122,14 @@ export async function POST(req: NextRequest) {
           type: type as any,
           id: hymn.id,
           bucket: "hymn-media",
-          insertPayload: (publicUrl) => ({
-            hymn_id: hymn.id,
-            url: publicUrl,
-            type,
-          }),
+          insertPayload: (publicUrl) => {
+            medias[type] = publicUrl;
+            return {
+              hymn_id: hymn.id,
+              url: publicUrl,
+              type,
+            };
+          },
           insertTable: "hymn_media",
         });
       }
