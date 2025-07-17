@@ -19,32 +19,19 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+type UserProfile = {
+  id: string;
+  name: string;
+  avatar_url: string;
+};
 
 const statCards = [
-  {
-    id: 1,
-    icon: MessageSquare,
-    value: "150",
-    label: "Post",
-  },
-  {
-    id: 2,
-    icon: Users,
-    value: "569",
-    label: "Followers",
-  },
-  {
-    id: 3,
-    icon: ThumbsUp,
-    value: "12.38k",
-    label: "Likes",
-  },
-  {
-    id: 4,
-    icon: Eye,
-    value: "847.76k",
-    label: "Impression",
-  },
+  { id: 1, icon: MessageSquare, value: "150", label: "Post" },
+  { id: 2, icon: Users, value: "569", label: "Followers" },
+  { id: 3, icon: ThumbsUp, value: "12.38k", label: "Likes" },
+  { id: 4, icon: Eye, value: "847.76k", label: "Impression" },
 ];
 
 const barData = [
@@ -92,16 +79,52 @@ const topShares = [
 ];
 
 export default function UserDashboard() {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/user");
+        const json = await res.json();
+        if (json?.data?.user) {
+          setUser(json.data.user);
+        }
+      } catch (error) {
+        console.error("Failed to load user:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <div className="p-6 space-y-6 bg-[#f5f6f8] border-t-3 min-h-screen">
-      <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
-        Dashboard
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900">Dashboard</h2>
+        {loading ? (
+          <p className="text-sm text-gray-500">Loading user...</p>
+        ) : user ? (
+          <div className="flex items-center gap-3">
+            <Image
+              src={user.avatar_url || "/default-avatar.png"}
+              alt="User avatar"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full ring-2 ring-black object-cover"
+            />
+            <span className="text-gray-700 font-medium">{user.name}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-red-500">User not found</p>
+        )}
+      </div>
 
+      {/* Dashboard Stats and Views Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Stats + Chart */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {statCards.map((card) => (
               <div
@@ -117,7 +140,6 @@ export default function UserDashboard() {
             ))}
           </div>
 
-          {/* Bar Chart */}
           <div className="bg-white p-4 rounded-xl shadow-sm border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-gray-900">Views</h3>
@@ -138,14 +160,11 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Right Column: Recent Comments + Top Shares */}
+        {/* Recent Comments + Top Shares */}
         <div className="space-y-4">
-          {/* Recent Comments */}
           <div className="bg-white p-4 rounded-xl shadow-sm border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-medium text-gray-900">
-                Recent Comment
-              </h3>
+              <h3 className="text-sm font-medium text-gray-900">Recent Comment</h3>
               <button className="text-gray-500">•••</button>
             </div>
             <div className="space-y-4">
@@ -156,12 +175,10 @@ export default function UserDashboard() {
                     alt={comment.name}
                     width={36}
                     height={36}
-                    className="w-9 h-9 rounded-full ring-2 ring-black object-cover"
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-black"
                   />
                   <div className="text-sm">
-                    <p className="font-medium text-gray-900">
-                      {comment.name}
-                    </p>
+                    <p className="font-medium text-gray-900">{comment.name}</p>
                     <p className="text-gray-500 text-xs">{comment.text}</p>
                   </div>
                 </div>
@@ -169,7 +186,6 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          {/* Top Social Media Shared */}
           <div className="bg-white p-4 rounded-xl shadow-sm border">
             <h3 className="text-sm font-medium text-gray-900 mb-4">
               Top Social Media Shared
@@ -177,20 +193,13 @@ export default function UserDashboard() {
             <div className="space-y-4">
               {topShares.map(({ id, icon: Icon, color, count }) => (
                 <div key={id} className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 flex items-center justify-center rounded-full ${color}`}
-                  >
+                  <div className={`w-8 h-8 flex items-center justify-center rounded-full ${color}`}>
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 h-4 bg-gray-200 rounded-full">
-                    <div
-                      className={`h-4 ${color} rounded-full`}
-                      style={{ width: `${(count / 150) * 100}%` }}
-                    />
+                    <div className={`h-4 ${color} rounded-full`} style={{ width: `${(count / 150) * 100}%` }} />
                   </div>
-                  <div className="text-sm font-medium w-10 text-right">
-                    {count}
-                  </div>
+                  <div className="text-sm font-medium w-10 text-right">{count}</div>
                 </div>
               ))}
             </div>

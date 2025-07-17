@@ -1,167 +1,252 @@
-// app/profile/page.tsx
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { Pencil, Upload } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, ChangeEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+// import { supabase } from '@/lib/supabase';
+import { Pencil, Save, Upload } from 'lucide-react';
+import Image from 'next/image';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/supabase/client';
 
-interface Profile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  followers: number;
-  fullName: string;
-  avatar: string;
-}
+const schema = z.object({
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
+  email: z.string().email(),
+  address: z.string().min(1),
+});
 
-const ProfilePage = () => {
-  const [profile, setProfile] = useState<Profile>({
-    firstName: "Danesi umar",
-    lastName: "Salahudeen",
-    email: "Hudesign@hudeen.info",
-    address: "Edo State Ekpoma, Nigeria",
-    followers: 11253,
-    fullName: "Salahudeen Umar",
-    avatar: "/avatar.jpg",
+type FormData = z.infer<typeof schema>;
+
+export default function PersonalInfo() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>('/avatar-placeholder.png');
+  const [fullName, setFullName] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editField, setEditField] = useState<keyof Profile | null>(null);
-  const [tempValue, setTempValue] = useState("");
-  const [] = useState(false);
+  useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
 
-  const handleEditClick = (field: keyof Profile) => {
-    setEditField(field);
-    setTempValue(profile[field].toString());
-    setIsEditing(true);
-  };
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  const handleSave = () => {
-    if (editField) {
-      setProfile((prev) => ({ ...prev, [editField]: tempValue }));
+      if (user) {
+        setUserId(user.id);
+
+        const { data } = await supabase
+          .from('users')
+          .select('first_name, last_name, email, address, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+        if (data) {
+          reset(data);
+          setAvatarUrl(data.avatar_url || '/avatar-placeholder.png');
+          setFullName(`${data.first_name} ${data.last_name}`);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, [reset]);
+
+  const onSubmit = async (values: FormData) => {
+    if (!userId) return;
+
+    const { error } = await supabase
+      .from('users')
+      .update({ ...values, avatar_url: avatarUrl })
+      .eq('id', userId);
+
+    if (!error) {
       setIsEditing(false);
-      setEditField(null);
+      setFullName(`${values.first_name} ${values.last_name}`);
     }
   };
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProfile((prev) => ({ ...prev, avatar: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file || !userId) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${uuidv4()}.${fileExt}`;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { data, error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      console.error('Upload failed:', uploadError.message);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    const newUrl = publicUrlData?.publicUrl;
+
+    if (newUrl) {
+      setAvatarUrl(newUrl);
+      await supabase
+        .from('users')
+        .update({ avatar_url: newUrl })
+        .eq('id', userId);
     }
   };
+
+  if (loading) return <p className="text-sm text-gray-500">Loading...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <h2 className="text-xl font-semibold">Personal profile</h2>
-
+    <div className="space-y-6">
       {/* Profile Card */}
-      <section className="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4 relative">
-          <div className="relative group">
+      <div className="bg-[#f9f9f9] p-4 rounded-xl flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
             <Image
-              src={profile.avatar}
-              alt="Avatar"
-              width={50}
-              height={50}
-              className="rounded-full object-cover"
-            />
-            <label className="absolute bottom-0 right-0 bg-white border border-gray-300 rounded-full p-1 cursor-pointer group-hover:opacity-100 opacity-0 transition-opacity">
-              <Upload className="w-4 h-4 text-gray-600" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
+               src={avatarUrl}
+                alt="Profile"
+                width={50}
+               height={50}
+                className="rounded-full object-cover ring-2 ring-black"
               />
-            </label>
+
+            {isEditing && (
+              <label className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
+                <Upload size={14} className="text-gray-500" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
           <div>
-            <h3 className="font-medium text-base">{profile.fullName}</h3>
-            <p className="text-sm text-gray-500">
-              {profile.followers.toLocaleString()} followers
-            </p>
+            <h2 className="font-semibold">{fullName}</h2>
+            <p className="text-sm text-gray-500">11,253 followers</p>
           </div>
         </div>
         <button
-          className="text-green-600 font-medium flex items-center gap-1"
-          onClick={() => handleEditClick("fullName")}
+          onClick={() => setIsEditing((prev) => !prev)}
+          className="bg-green-100 text-green-600 text-sm px-4 py-1 rounded-md flex items-center gap-1 hover:bg-green-200"
         >
-          <Pencil className="w-4 h-4" /> Edit
+          <Pencil size={14} />
+          {isEditing ? 'Cancel' : 'Edit'}
         </button>
-      </section>
+      </div>
 
-      {/* Personal Info */}
-      <section className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium">Personal Information</h3>
-          <button
-            className="text-green-600 font-medium flex items-center gap-1"
-            onClick={() => handleEditClick("firstName")}
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </button>
+      {/* Personal Info Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="border border-gray-200 rounded-xl p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-medium">Personal Information</h3>
+            {isEditing && (
+              <button
+                type="submit"
+                className="bg-black text-white px-4 py-1 rounded-md text-sm flex items-center gap-1"
+              >
+                <Save size={14} />
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm">
+            <div>
+              <p className="text-gray-500 mb-1">First Name</p>
+              {isEditing ? (
+                <>
+                  <input
+                    {...register('first_name')}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                  {errors.first_name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.first_name.message}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-700">{watch('first_name')}</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-gray-500 mb-1">Last Name</p>
+              {isEditing ? (
+                <>
+                  <input
+                    {...register('last_name')}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                  {errors.last_name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.last_name.message}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-700">{watch('last_name')}</p>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-gray-500 mb-1">Email Address</p>
+              {isEditing ? (
+                <>
+                  <input
+                    {...register('email')}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-700">{watch('email')}</p>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-xs text-gray-500">First Name</p>
-              <p className="text-sm">{profile.firstName}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Last Name</p>
-              <p className="text-sm">{profile.lastName}</p>
-            </div>
+
+        {/* Address Section */}
+        <div className="border border-gray-200 rounded-xl p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-medium">Address</h3>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Email Address</p>
-            <p className="text-sm">{profile.email}</p>
+            <p className="text-gray-500 mb-1">Location</p>
+            {isEditing ? (
+              <>
+                <input
+                  {...register('address')}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-gray-700">{watch('address')}</p>
+            )}
           </div>
         </div>
-      </section>
-
-      {/* Address */}
-      <section className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-medium">Address</h3>
-          <button
-            className="text-green-600 font-medium flex items-center gap-1"
-            onClick={() => handleEditClick("address")}
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </button>
-        </div>
-        <p className="text-sm">{profile.address}</p>
-      </section>
-
-      {/* Edit Dialog */}
-      {isEditing && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
-            <h4 className="text-lg font-medium mb-4">Edit {editField}</h4>
-            <Input
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              className="mb-4"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>Save</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      </form>
     </div>
   );
-};
-
-export default ProfilePage;
+}
