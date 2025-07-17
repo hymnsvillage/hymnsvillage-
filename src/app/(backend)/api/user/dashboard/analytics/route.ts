@@ -23,8 +23,8 @@ export async function GET() {
   const { data, error } = await supabase
     .from("impressions")
     .select("id, created_at")
-    .eq("target_type", "blog")
-    .eq("author_id", user.id)
+    // .eq("target_type", "blog")
+    .eq("viewer_id", user.id)
     .gte("created_at", formatISO(start))
     .lte("created_at", formatISO(end));
 
