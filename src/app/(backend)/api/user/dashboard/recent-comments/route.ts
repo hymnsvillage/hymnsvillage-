@@ -1,6 +1,6 @@
 import {
-    createSupabaseServerClient,
-    customResponse,
+  createSupabaseServerClient,
+  customResponse,
 } from "@/app/(backend)/lib";
 import { NextResponse } from "next/server";
 
@@ -18,9 +18,9 @@ export async function GET() {
 
   const { data: comments, error } = await supabase
     .from("blog_comments")
-    .select("id, content, created_at, user_id, blog_id, users(email)")
+    .select("id, content, created_at, user_id, blog_id")
     .order("created_at", { ascending: false })
-    .eq("author_id", user.id)
+    .eq("user_id", user.id)
     .limit(5);
 
   if (error)

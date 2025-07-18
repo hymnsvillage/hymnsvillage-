@@ -1,6 +1,6 @@
 import {
-    createSupabaseServerClient,
-    customResponse,
+  createSupabaseServerClient,
+  customResponse,
 } from "@/app/(backend)/lib";
 import { requireAdmin } from "@/app/(backend)/middlewares/auth";
 import { NextResponse } from "next/server";
@@ -21,7 +21,7 @@ export async function GET() {
   const [blogs, hymns, users] = await Promise.all([
     supabase.from("blogs").select("id", { count: "exact", head: true }),
     supabase.from("hymns").select("id", { count: "exact", head: true }),
-    supabase.auth.admin.listUsers(), // paginate or cache in real use
+    supabase.auth.admin.listUsers(),
     // supabase.from("visitors").select("id", { count: "exact", head: true }),
   ]);
 

@@ -14,7 +14,6 @@ import { NextRequest, NextResponse } from "next/server";
  * @access Admin only
  */
 export async function GET(req: NextRequest) {
-  //_: NextRequest
   const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
