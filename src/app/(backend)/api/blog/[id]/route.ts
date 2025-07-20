@@ -72,7 +72,7 @@ export async function PUT(
     );
   }
 
-  const { title, content, categoryId, tags, mediaUrls = [] } = parsed.data;
+  const { title, content, categoryId, tags } = parsed.data;
 
   // 1. Update main blog fields
   const { error: updateError } = await supabase
@@ -94,14 +94,14 @@ export async function PUT(
     }
   }
 
-  // 3. Update blog media
-  await supabase.from("blog_media").delete().eq("blog_id", params.id);
-  for (const url of mediaUrls) {
-    await supabase.from("blog_media").insert({
-      blog_id: params.id,
-      url,
-    });
-  }
+  // // 3. Update blog media
+  // await supabase.from("blog_media").delete().eq("blog_id", params.id);
+  // for (const url of mediaUrls) {
+  //   await supabase.from("blog_media").insert({
+  //     blog_id: params.id,
+  //     url,
+  //   });
+  // }
 
   return NextResponse.json({ message: "Blog updated successfully" });
 }
