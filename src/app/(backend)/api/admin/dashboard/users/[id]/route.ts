@@ -11,16 +11,20 @@ import { NextRequest, NextResponse } from "next/server";
  * @description Fetch details of a specific user
  * @access Admin only
  */
-export async function GET(
-  _: NextRequest,
-  { params }: { params: { id: string } }
-) {
+
+interface Context {
+  params: {
+    id: string;
+  };
+}
+export async function GET(_: NextRequest, context: Context) {
+  const { id } = context.params;
   const supabase = await createSupabaseServerClient();
   const { error: authError } = await requireAdmin(supabase);
   if (authError)
     return NextResponse.json({ error: authError }, { status: 403 });
 
-  const { data, error } = await supabase.auth.admin.getUserById(params.id);
+  const { data, error } = await supabase.auth.admin.getUserById(id);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 404 });
