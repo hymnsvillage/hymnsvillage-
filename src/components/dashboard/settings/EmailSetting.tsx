@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/supabase/client';
-// import { supabase } from '@/lib/supabase';
 
 const schema = z.object({
   email: z.string().email(),
@@ -30,9 +29,8 @@ export default function EmailSettings() {
     const fetchUser = async () => {
       const {
         data: { user },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        error,
       } = await supabase.auth.getUser();
+
       if (user) {
         setCurrentEmail(user.email ?? '');
       }
@@ -45,38 +43,48 @@ export default function EmailSettings() {
     setError('');
     setSuccess('');
 
-    const { email, password } = data;
+    const { email: newEmail, password } = data;
 
-    // Sign in with current credentials to verify password
+    // Step 1: Re-authenticate user with password
     const {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      data: { session },
-      error: signInErr,
+      error: signInError,
     } = await supabase.auth.signInWithPassword({
       email: currentEmail,
       password,
     });
 
-    if (signInErr) {
+    if (signInError) {
       setError('Incorrect password.');
       return;
     }
 
-    // Update email in Supabase Auth
-    const { error: updateError } = await supabase.auth.updateUser({ email });
+    // Step 2: Call backend to request email change
+    const response = await fetch('/api/auth/settings/change-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newEmail }),
+    });
 
-    if (updateError) {
-      setError(updateError.message);
-    } else {
-      setSuccess('Email change requested successfully!');
-      reset();
-      setCurrentEmail(email);
+    const result = await response.json();
+
+    if (!response.ok) {
+      setError(result.error || 'Failed to request email change.');
+      return;
     }
+
+    // Step 3: Send verification email to new address
+    await fetch('/api/auth/settings/send-verification', {
+      method: 'POST',
+    });
+
+    setSuccess('Email change requested! Check your inbox for a verification link.');
+    reset();
+    setCurrentEmail(newEmail);
   };
 
   return (
     <div className="bg-white rounded-xl shadow-sm w-full p-6 space-y-8">
-      {/* Current Email Card */}
+      {/* Current Email */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Email Settings</h2>
         <div className="border border-gray-200 rounded-xl p-4 flex items-center justify-between">
@@ -85,7 +93,7 @@ export default function EmailSettings() {
         </div>
       </div>
 
-      {/* Email Change Form */}
+      {/* Change Email Form */}
       <div>
         <h3 className="text-base font-medium mb-3">Change Email Address</h3>
         <form
@@ -110,7 +118,7 @@ export default function EmailSettings() {
             <input
               {...register('password')}
               type="password"
-              placeholder="At least 8 characters"
+              placeholder="Enter current password"
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             />
             {errors.password && (

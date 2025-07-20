@@ -16,14 +16,18 @@ export const loginUser = (data: { email: string; password: string }) =>
 
 export const logout = () => client.post("/auth/logout");
 
-export const getCurrentUser = () =>
-  client.get("/auth/me").then((res) => res.data.user);
+export const getCurrentUser = async () =>
+  await client.get("/auth/me") 
 
-export const updateMe = (data: { name?: string; avatarFile?: string }) =>
-  client.put("/auth/me", data);
+export const updateMe = (formData: FormData) =>
+  client.put("/auth/me", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
-export const forgotPassword = (email: string) =>
-  client.post("/auth/forgot", { email });
+export const forgotPassword = async (email: string) =>
+ await client.post("/auth/forgot-password", { email });
 
 export const changePassword = (password: string) =>
   client.post("/auth/change-password", { password });

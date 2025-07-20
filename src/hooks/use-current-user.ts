@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/api/auth";
+import { CleanUser } from "@/app/(backend)/lib/cleanUser";
 import { useQuery } from "@tanstack/react-query";
 function useCurrentUser() {
   const { data , isLoading} = useQuery({
@@ -6,7 +7,7 @@ function useCurrentUser() {
     queryFn: getCurrentUser,
   });
 
-  return { user: data?.data, isLoading };
+  return { user: data?.data as CleanUser , isLoading };
 }
 
 export { useCurrentUser };

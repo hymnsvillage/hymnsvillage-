@@ -13,7 +13,6 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 function getMimeType(buffer: Buffer): string | null {
-  // Basic PNG/JPEG/WebP magic number check
   if (
     buffer
       .subarray(0, 8)
@@ -69,14 +68,13 @@ export async function PUT(req: NextRequest) {
   }
 
   const formData = await req.formData();
-
   const name = formData.get("name")?.toString();
   const userRole = formData.get("userRole")?.toString();
   const avatarFile = formData.get("avatar") as File | null;
 
   let avatarUrl: string | undefined;
 
-  if (avatarFile) {
+  if (avatarFile && typeof avatarFile.arrayBuffer === "function") {
     const buffer = Buffer.from(await avatarFile.arrayBuffer());
     const sizeMB = buffer.length / (1024 * 1024);
     if (sizeMB > MAX_FILE_SIZE) {
@@ -107,8 +105,7 @@ export async function PUT(req: NextRequest) {
       )
     ) {
       const url = new URL(existingAvatarUrl);
-      const pathToDelete = url.pathname.split("/avatars/")[1]; // get path after /avatars/
-
+      const pathToDelete = url.pathname.split("/avatars/")[1];
       if (pathToDelete) {
         await supabase.storage.from("avatars").remove([pathToDelete]);
       }
@@ -132,7 +129,6 @@ export async function PUT(req: NextRequest) {
     avatarUrl = publicUrl.publicUrl;
   }
 
-  // Construct profile update object
   const updateData: Record<string, unknown> = {};
   if (name) updateData.name = name;
   if (userRole) updateData.userRole = userRole;
