@@ -101,7 +101,7 @@ export default function LoginForm() {
 
         {/* Forgot password */}
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="text-sm text-gray-700 hover:underline">
+          <Link href="/forget-password" className="text-sm text-gray-700 hover:underline">
             Forgotten password?
           </Link>
         </div>

@@ -5,7 +5,7 @@ export async function requireAdmin(
 ) {
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await (await supabase).auth.getUser();
 
   if (!user || user.user_metadata?.userRole !== "admin") {
     return { user: null, error: "Admin access only" };

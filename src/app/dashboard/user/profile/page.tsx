@@ -1,73 +1,120 @@
-// app/profile/page.tsx
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { Pencil, Upload } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { Pencil, Upload } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { updateMe } from '@/api/auth';
 
-interface Profile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  followers: number;
-  fullName: string;
-  avatar: string;
-}
+const profileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  address: z.string().min(1, 'Address is required'),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState<Profile>({
-    firstName: "Danesi umar",
-    lastName: "Salahudeen",
-    email: "Hudesign@hudeen.info",
-    address: "Edo State Ekpoma, Nigeria",
-    followers: 11253,
-    fullName: "Salahudeen Umar",
-    avatar: "/avatar.jpg",
+  const [profile, setProfile] = useState<ProfileFormData | null>(null);
+  const [avatar, setAvatar] = useState('/avatar.jpg');
+  const [followers, setFollowers] = useState(0);
+  const [editSection, setEditSection] = useState<keyof ProfileFormData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      address: '',
+    },
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editField, setEditField] = useState<keyof Profile | null>(null);
-  const [tempValue, setTempValue] = useState("");
-  const [] = useState(false);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const json = await res.json();
+        const user = json?.data;
 
-  const handleEditClick = (field: keyof Profile) => {
-    setEditField(field);
-    setTempValue(profile[field].toString());
-    setIsEditing(true);
-  };
+        if (user) {
+          const profileData: ProfileFormData = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            address: user.address || '',
+          };
 
-  const handleSave = () => {
-    if (editField) {
-      setProfile((prev) => ({ ...prev, [editField]: tempValue }));
-      setIsEditing(false);
-      setEditField(null);
+          setAvatar(user.avatarUrl || '/avatar.jpg');
+          setFollowers(user.followers || 0);
+          setProfile(profileData);
+          reset(profileData);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [reset]);
+
+  const onSubmit = async (data: ProfileFormData) => {
+    if (!editSection) return;
+
+    const formData = new FormData();
+    formData.append(editSection, data[editSection]);
+
+    try {
+      await updateMe(formData);
+      setProfile((prev) => (prev ? { ...prev, [editSection]: data[editSection] } : prev));
+      setEditSection(null);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
     }
   };
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setProfile((prev) => ({ ...prev, avatar: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      await updateMe(formData);
+      const imageUrl = URL.createObjectURL(file);
+      setAvatar(imageUrl);
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
     }
   };
+
+  if (loading) return <div className="p-6 text-center">Loading profile...</div>;
+  if (!profile) return <div className="p-6 text-center text-red-500">Profile not found.</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <h2 className="text-xl font-semibold">Personal profile</h2>
+      <h2 className="text-xl font-semibold">Personal Profile</h2>
 
-      {/* Profile Card */}
+      {/* Avatar Card */}
       <section className="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
         <div className="flex items-center gap-4 relative">
           <div className="relative group">
             <Image
-              src={profile.avatar}
+              src={avatar}
               alt="Avatar"
               width={50}
               height={50}
@@ -75,93 +122,121 @@ const ProfilePage = () => {
             />
             <label className="absolute bottom-0 right-0 bg-white border border-gray-300 rounded-full p-1 cursor-pointer group-hover:opacity-100 opacity-0 transition-opacity">
               <Upload className="w-4 h-4 text-gray-600" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-              />
+              <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </label>
           </div>
           <div>
-            <h3 className="font-medium text-base">{profile.fullName}</h3>
-            <p className="text-sm text-gray-500">
-              {profile.followers.toLocaleString()} followers
-            </p>
+            <h3 className="font-medium text-base">{profile.firstName} {profile.lastName}</h3>
+            <p className="text-sm text-gray-500">{followers.toLocaleString()} followers</p>
           </div>
         </div>
-        <button
-          className="text-green-600 font-medium flex items-center gap-1"
-          onClick={() => handleEditClick("fullName")}
-        >
-          <Pencil className="w-4 h-4" /> Edit
-        </button>
       </section>
 
-      {/* Personal Info */}
+      {/* Section: Name */}
       <section className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium">Personal Information</h3>
-          <button
-            className="text-green-600 font-medium flex items-center gap-1"
-            onClick={() => handleEditClick("firstName")}
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </button>
+          <h3 className="font-medium">Name</h3>
+          {editSection !== 'firstName' && editSection !== 'lastName' && (
+            <button
+              className="text-green-600 font-medium flex items-center gap-1"
+              onClick={() => setEditSection('firstName')}
+            >
+              <Pencil className="w-4 h-4" /> Edit
+            </button>
+          )}
         </div>
-        <div className="space-y-3">
-          <div className="flex justify-between">
+        {editSection === 'firstName' || editSection === 'lastName' ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-gray-500">First Name</p>
-              <p className="text-sm">{profile.firstName}</p>
+              <Input {...register('firstName')} />
+              {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName.message}</p>}
             </div>
             <div>
               <p className="text-xs text-gray-500">Last Name</p>
-              <p className="text-sm">{profile.lastName}</p>
+              <Input {...register('lastName')} />
+              {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName.message}</p>}
             </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Email Address</p>
-            <p className="text-sm">{profile.email}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Address */}
-      <section className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-medium">Address</h3>
-          <button
-            className="text-green-600 font-medium flex items-center gap-1"
-            onClick={() => handleEditClick("address")}
-          >
-            <Pencil className="w-4 h-4" /> Edit
-          </button>
-        </div>
-        <p className="text-sm">{profile.address}</p>
-      </section>
-
-      {/* Edit Dialog */}
-      {isEditing && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
-            <h4 className="text-lg font-medium mb-4">Edit {editField}</h4>
-            <Input
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              className="mb-4"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
+            <div className="col-span-2 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditSection(null)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save'}
               </Button>
-              <Button onClick={handleSave}>Save</Button>
             </div>
+          </form>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <p>{profile.firstName}</p>
+            <p>{profile.lastName}</p>
           </div>
+        )}
+      </section>
+
+      {/* Section: Email */}
+      <section className="bg-white rounded-xl shadow-sm p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Email</h3>
+          {editSection !== 'email' && (
+            <button
+              className="text-green-600 font-medium flex items-center gap-1"
+              onClick={() => setEditSection('email')}
+            >
+              <Pencil className="w-4 h-4" /> Edit
+            </button>
+          )}
         </div>
-      )}
+        {editSection === 'email' ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+            <div>
+              <p className="text-xs text-gray-500">Email Address</p>
+              <Input {...register('email')} />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditSection(null)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-sm">{profile.email}</p>
+        )}
+      </section>
+
+      {/* Section: Address */}
+      <section className="bg-white rounded-xl shadow-sm p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium">Address</h3>
+          {editSection !== 'address' && (
+            <button
+              className="text-green-600 font-medium flex items-center gap-1"
+              onClick={() => setEditSection('address')}
+            >
+              <Pencil className="w-4 h-4" /> Edit
+            </button>
+          )}
+        </div>
+        {editSection === 'address' ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+            <div>
+              <p className="text-xs text-gray-500">Your Address</p>
+              <Input {...register('address')} />
+              {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address.message}</p>}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setEditSection(null)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-sm">{profile.address}</p>
+        )}
+      </section>
     </div>
   );
 };
 
-export default ProfilePage;
+export default ProfilePage

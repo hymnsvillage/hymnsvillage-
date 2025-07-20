@@ -2,27 +2,39 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Bell, Search } from "lucide-react";
+import { useUser } from "@/app/context/UserContext";
 
-export default  function Topbar() {
+
+export default function Topbar() {
   const router = useRouter();
+  const { user } = useUser();
+
+  const handleAvatarClick = () => {
+    if (!user) return;
+    const profileRoute =
+      user.role === "admin"
+        ? "/dashboard/admin/profile"
+        : "/dashboard/user/profile";
+    router.push(profileRoute);
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm w-full relative">
-      {/* Logo and name */}
+      {/* Logo */}
       <div className="flex items-center space-x-2">
         <Image
           src="/logo.png"
           alt="Logo"
           width={50}
           height={50}
-          className="rounded-full "
+          className="rounded-full"
         />
         <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
           Hymns Village
         </span>
       </div>
 
-      {/* Centered Search Bar - only visible on desktop */}
+      {/* Search Bar */}
       <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-md hidden sm:block">
         <div className="relative">
           <input
@@ -34,9 +46,8 @@ export default  function Topbar() {
         </div>
       </div>
 
-      {/* Notification and Avatar */}
+      {/* Notifications + Avatar */}
       <div className="flex items-center space-x-4">
-        {/* Notification with black ring */}
         <button
           onClick={() => router.push("/dashboard/admin/notification")}
           className="rounded-full ring-2 ring-gray p-1.5 hover:bg-gray-100"
@@ -44,17 +55,17 @@ export default  function Topbar() {
           <Bell className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Avatar with black ring */}
-        <div className="w-9 h-9 rounded-full ring-2 ring-gray-500 overflow-hidden">
-          <p>{""}</p>
-          <Image
-            src="/avatar.jpg"
-            alt="Admin Avatar"
-            width={36}
-            height={36}
-            className="object-cover"
-          />
-        </div>
+        <button onClick={handleAvatarClick}>
+          <div className="w-9 h-9 rounded-full ring-2 ring-gray-500 overflow-hidden">
+            <Image
+              src={user?.avatarUrl || "/avatar.jpg"}
+              alt="User Avatar"
+              width={36}
+              height={36}
+              className="object-cover"
+            />
+          </div>
+        </button>
       </div>
     </div>
   );
