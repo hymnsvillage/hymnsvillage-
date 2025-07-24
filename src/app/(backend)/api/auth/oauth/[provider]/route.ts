@@ -24,7 +24,7 @@ export async function GET(
   const {
     data: { url },
     error,
-  } = await supabase.auth.signInWithOAuth({
+  } = await (await supabase).auth.signInWithOAuth({
     provider: provider.toUpperCase() as Provider,
     options: { redirectTo: `${appUrl}/auth/callback` },
   });
