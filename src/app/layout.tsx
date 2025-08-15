@@ -1,9 +1,10 @@
 // app/layout.tsx
+import { UserProvider } from "@/app/context/UserContext";
+import { QueryProvider } from "@/components/provider/QueryProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
-import { UserProvider } from "@/app/context/UserContext"; 
-import { QueryProvider } from "@/components/provider/QueryProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,11 +25,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <QueryProvider>
-        <UserProvider>
-          {children}
-        </UserProvider>
+          <UserProvider>
+            <Suspense> {children}</Suspense>
+          </UserProvider>
         </QueryProvider>
-        
       </body>
     </html>
   );
