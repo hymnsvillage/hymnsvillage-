@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -15,228 +15,270 @@ import CodeBlock from '@tiptap/extension-code-block';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Blockquote from '@tiptap/extension-blockquote';
 import HardBreak from '@tiptap/extension-hard-break';
-import Heading from '@tiptap/extension-heading'; 
-
-
-import { SuggestionOptions } from '@tiptap/suggestion';
+import Heading from '@tiptap/extension-heading';
+import CreatableSelect from 'react-select/creatable';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import slugify from 'slugify';
 import NextImage from 'next/image';
-
 import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
-  List,
-  ListOrdered,
-  Heading2,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Image as ImageIcon,
-  Youtube as YoutubeIcon,
-  Code,
-  Highlighter,
-  Quote,
-  Minus,
-  Eraser,
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
+  Heading2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Youtube as YoutubeIcon,
+  Code, Highlighter, Quote, Minus, Eraser, Eye
 } from 'lucide-react';
 
-type MentionItem = { id: number; label: string };
 
-const mentionSuggestion: Partial<SuggestionOptions<MentionItem>> = {
-  char: '@',
-  items: ({ query }) => {
-    const users: MentionItem[] = [
-      { id: 1, label: 'Christiana' },
-      { id: 2, label: 'JohnDoe' },
-      { id: 3, label: 'JaneDev' },
-    ];
-    return users.filter(user =>
-      user.label.toLowerCase().startsWith(query.toLowerCase())
-    );
-  },
-  render: () => {
-    let popup: HTMLDivElement | null = null;
-
-    return {
-      onStart: ({ items, clientRect }) => {
-        popup = document.createElement('div');
-        popup.className = 'mention-popup bg-white border rounded shadow p-2 absolute z-50';
-        popup.innerHTML = items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
-        document.body.appendChild(popup);
-
-        const rect = clientRect?.();
-        if (popup && rect) {
-          popup.style.top = `${rect.bottom + window.scrollY}px`;
-          popup.style.left = `${rect.left + window.scrollX}px`;
-        }
-      },
-      onUpdate: ({ items }) => {
-        if (popup) {
-          popup.innerHTML = items.map(item => `<div class="p-1 cursor-pointer hover:bg-gray-100">@${item.label}</div>`).join('');
-        }
-      },
-      onExit: () => {
-        popup?.remove();
-        popup = null;
-      },
-    };
-  },
-};
+type OptionType = { value: string; label: string };
+type Category = { id: string; name: string };
+type Tag = { id: string; name: string };
 
 const RichTextEditor = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Worship');
+  const [slug, setSlug] = useState('');
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [canonicalUrl, setCanonicalUrl] = useState('');
+  const [category, setCategory] = useState<OptionType | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<OptionType[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const [altText, setAltText] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ codeBlock: false, hardBreak: false }),
-      Heading.configure({ levels: [1, 2, 3] }), // ✅ ADDED THIS
-      CodeBlock,
-      Underline,
+      Heading.configure({ levels: [1, 2, 3] }),
+      CodeBlock, Underline,
       Youtube.configure({ width: 640, height: 360 }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       CharacterCount.configure({ limit: 35000 }),
       Mention.configure({
         HTMLAttributes: { class: 'mention text-blue-500 font-semibold' },
-        suggestion: mentionSuggestion,
+        suggestion: {
+          char: '@',
+          items: ({ query }) => [
+            { id: 1, label: 'Christiana' },
+            { id: 2, label: 'JohnDoe' },
+          ].filter(user => user.label.toLowerCase().includes(query.toLowerCase())),
+        }
       }),
       ImageExtension.configure({ inline: false, allowBase64: true }),
       Highlight,
-      Placeholder.configure({
-        placeholder: 'Start writing your article here...',
-      }),
-      HorizontalRule,
-      Blockquote,
-      HardBreak.configure({ keepMarks: false }),
+      Placeholder.configure({ placeholder: 'Start writing your article here...' }),
+      HorizontalRule, Blockquote, HardBreak.configure({ keepMarks: false })
     ],
     content: '',
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setFeaturedImage(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [catRes, tagRes] = await Promise.all([
+        axios.get('/api/blog/category'),
+         axios.get('/api/blog/tag'),
+      ]);
+
+      setCategories(Array.isArray(catRes.data?.data?.categories) ? catRes.data.data.categories : []);
+
+      setTags(Array.isArray(tagRes.data?.data?.tags) ? tagRes.data.data.tags : []);
+
+    } catch (error) {
+      console.error('Error fetching categories/tags', error);
+      setCategories([]);
+      setTags([]);
+    }
+  };
+  fetchData();
+}, []);
+
+
+  useEffect(() => {
+    setSlug(slugify(title, { lower: true, strict: true }));
+    setMetaTitle(title);
+  }, [title]);
+
+   
+  const handleImagePreview = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    setFeaturedImage(reader.result as string);
+  };
+  reader.readAsDataURL(file);
+};
+
+
+  const handleCreateCategory = async (inputValue: string) => {
+    try {
+      const res = await axios.post('/api/blog/category', { name: inputValue });
+      const newCat = res.data;
+      setCategories(prev => [...prev, newCat]);
+      setCategory({ value: newCat.id, label: newCat.name });
+      toast.success('Category created');
+    } catch {
+      toast.error('Failed to create category');
     }
   };
 
-  const handlePreview = () => {
-    const content = editor?.getHTML();
-    const previewWindow = window.open('', '_blank');
-    if (previewWindow) {
-      previewWindow.document.write(`
-        <html><head><title>${title}</title>
-        <style>body{font-family:sans-serif;padding:20px;} img{max-width:100%;height:auto;} h1{margin-top:1rem;}</style></head><body>
-        ${featuredImage
-          ? `<div style="position:relative;text-align:center;">
-              <img src="${featuredImage}" alt="${altText}" />
-              <h1 style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);color:white;background:rgba(0,0,0,0.6);padding:0.5rem 1rem;border-radius:0.5rem;">${title}</h1>
-            </div>`
-          : ''
-        }
-        ${content}
-        </body></html>
-      `);
-      previewWindow.document.close();
+  const handleCreateTag = async (inputValue: string) => {
+    try {
+      const res = await axios.post('/api/blog/tag', { name: inputValue });
+      const newTag = res.data;
+      setTags(prev => [...prev, newTag]);
+      setSelectedTags(prev => [...prev, { value: newTag.id, label: newTag.name }]);
+      toast.success('Tag created');
+    } catch {
+      toast.error('Failed to create tag');
     }
   };
+
+ const handleSubmit = async () => {
+  if (!title || !editor) return toast.error('Title and content are required');
+
+  try {
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('slug', slug);
+    formData.append('content', editor.getHTML());
+    formData.append('metaTitle', metaTitle);
+    formData.append('metaDescription', metaDescription);
+    formData.append('canonicalUrl', canonicalUrl);
+    formData.append('altText', altText);
+
+    // Only append if category exists
+    if (category?.value) {
+      formData.append('categoryId', category.value);
+    }
+
+    // Only append if tags are selected
+    selectedTags.forEach((tag, index) => {
+      formData.append(`tagIds[${index}]`, tag.value);
+    });
+
+    // Append image file if selected
+    const fileInput = fileInputRef.current;
+    const file = fileInput?.files?.[0];
+    if (file) {
+      formData.append('file', file);
+    }
+
+    await axios.post('/api/blog', formData);
+
+    toast.success('Post created successfully');
+
+    // Reset form
+    setTitle('');
+    setSlug('');
+    setMetaTitle('');
+    setMetaDescription('');
+    setCanonicalUrl('');
+    editor.commands.clearContent();
+    setCategory(null);
+    setSelectedTags([]);
+    setFeaturedImage(null);
+    setAltText('');
+    if (fileInput?.value) fileInput.value = '';
+  } catch (err) {
+    console.error(err);
+    toast.error('Failed to create post');
+  }
+};
+
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toolbarButtons: [string, () => React.JSX.Element, any?][] = [
+    ['toggleBold', () => <Bold size={16} />],
+    ['toggleItalic', () => <Italic size={16} />],
+    ['toggleUnderline', () => <UnderlineIcon size={16} />],
+    ['toggleStrike', () => <Strikethrough size={16} />],
+    ['toggleHighlight', () => <Highlighter size={16} />],
+    ['toggleCodeBlock', () => <Code size={16} />],
+    ['toggleBlockquote', () => <Quote size={16} />],
+    ['setHorizontalRule', () => <Minus size={16} />],
+    ['setHardBreak', () => <>↵</>],
+    ['unsetAllMarks.clearNodes', () => <Eraser size={16} />],
+    ['toggleBulletList', () => <List size={16} />],
+    ['toggleOrderedList', () => <ListOrdered size={16} />],
+    ['toggleHeading', () => <Heading2 size={16} />, { level: 2 }],
+    ['setTextAlign', () => <AlignLeft size={16} />, 'left'],
+    ['setTextAlign', () => <AlignCenter size={16} />, 'center'],
+    ['setTextAlign', () => <AlignRight size={16} />, 'right']
+  ];
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <ToastContainer />
+      <div className="flex justify-between mb-4">
+        <h1 className="text-xl font-semibold">Create Blog Post</h1>
+        <button onClick={() => setShowPreview(!showPreview)} className="text-blue-600 hover:underline flex items-center">
+          <Eye className="w-4 h-4 mr-1" /> {showPreview ? 'Hide Preview' : 'Show Preview'}
+        </button>
+      </div>
+
+      {showPreview && (
+        <div
+          className="prose max-w-none border p-4 rounded-md bg-gray-50 mb-4"
+          dangerouslySetInnerHTML={{ __html: editor?.getHTML() ?? '' }}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Sidebar */}
         <div className="space-y-6">
-          <div>
-            <label className="block font-medium mb-2">Article Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title of article"
-              className="w-full border rounded-md p-3 text-sm shadow-sm"
-            />
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Post Title" className="w-full border p-3 rounded-md" />
+          <input type="text" value={metaTitle} onChange={e => setMetaTitle(e.target.value)} placeholder="Meta Title" className="w-full border p-3 rounded-md" />
+          <textarea value={metaDescription} onChange={e => setMetaDescription(e.target.value)} placeholder="Meta Description" className="w-full border p-3 rounded-md" rows={2} />
+          <input type="text" value={canonicalUrl} onChange={e => setCanonicalUrl(e.target.value)} placeholder="Canonical URL (optional)" className="w-full border p-3 rounded-md" />
+
+          <div onClick={() => fileInputRef.current?.click()} className="border border-dashed p-4 text-center cursor-pointer bg-gray-50">
+            <ImageIcon className="mx-auto mb-2" /> Click to upload
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePreview} />
+
           </div>
 
-          <div>
-            <label className="block font-medium mb-2">Select Featured Image</label>
-            <div
-              className="w-full h-40 border border-dashed border-gray-400 rounded-md relative cursor-pointer overflow-hidden bg-gray-50 hover:bg-gray-100"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm z-0">
-                <ImageIcon className="mb-1" />
-                Click to choose image
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
+          {featuredImage && (
+            <div className="mt-2">
+              <NextImage src={featuredImage} alt={altText || 'Preview'} width={640} height={360} className="rounded-md w-full object-cover" />
+              <input value={altText} onChange={e => setAltText(e.target.value)} className="w-full mt-2 border p-2 rounded-md" placeholder="Alt text" />
             </div>
-            {featuredImage && (
-              <div className="mt-4">
-                <NextImage
-                  src={featuredImage}
-                  alt={altText || 'Featured Image'}
-                  width={640}
-                  height={360}
-                  className="rounded-md object-cover w-full"
-                />
-                <input
-                  type="text"
-                  placeholder="Alt text for image"
-                  value={altText}
-                  onChange={(e) => setAltText(e.target.value)}
-                  className="mt-2 w-full border rounded-md p-2 text-sm"
-                />
-              </div>
-            )}
-          </div>
+          )}
 
-          <div>
-            <label className="block font-medium mb-2">Select Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border rounded-md p-3 text-sm shadow-sm"
-            >
-              <option value="Worship">Worship</option>
-              <option value="Praise">Praise</option>
-              <option value="Faith">Faith</option>
-            </select>
-          </div>
+         <CreatableSelect
+               isClearable
+                onChange={setCategory}
+               onCreateOption={handleCreateCategory}
+                options={(categories || []).map(c => ({ value: c.id, label: c.name }))}
+                value={category}
+              placeholder="Select or create category"
+            />
+
+            <CreatableSelect
+                isMulti
+                onChange={(newValue) => setSelectedTags(newValue as OptionType[])}
+                onCreateOption={handleCreateTag}
+                options={(tags || []).map(t => ({ value: t.id, label: t.name }))}
+                value={selectedTags}
+                placeholder="Select or create tags"
+              />
+
         </div>
 
-        {/* Editor */}
         <div className="md:col-span-2 space-y-4">
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => editor?.chain().focus().toggleBold().run()} className="btn"><Bold size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleItalic().run()} className="btn"><Italic size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleUnderline().run()} className="btn"><UnderlineIcon size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleStrike().run()} className="btn"><Strikethrough size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleHighlight().run()} className="btn"><Highlighter size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleCodeBlock().run()} className="btn"><Code size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleBlockquote().run()} className="btn"><Quote size={16} /></button>
-            <button onClick={() => editor?.chain().focus().setHorizontalRule().run()} className="btn"><Minus size={16} /></button>
-            <button onClick={() => editor?.chain().focus().setHardBreak().run()} className="btn">↵</button>
-            <button onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()} className="btn"><Eraser size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleBulletList().run()} className="btn"><List size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleOrderedList().run()} className="btn"><ListOrdered size={16} /></button>
-            <button onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className="btn"><Heading2 size={16} /></button>
-            <button onClick={() => editor?.chain().focus().setTextAlign('left').run()} className="btn"><AlignLeft size={16} /></button>
-            <button onClick={() => editor?.chain().focus().setTextAlign('center').run()} className="btn"><AlignCenter size={16} /></button>
-            <button onClick={() => editor?.chain().focus().setTextAlign('right').run()} className="btn"><AlignRight size={16} /></button>
+            {toolbarButtons.map(([command, Icon, value]) => (
+              <button
+                key={command + (value ?? '')}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={() => (editor?.chain().focus() as any)[command](value).run()}
+                className="btn"
+              >
+                {Icon()}
+              </button>
+            ))}
             <button onClick={() => fileInputRef.current?.click()} className="btn"><ImageIcon size={16} /></button>
             <button onClick={() => {
               const url = prompt('Paste YouTube URL');
@@ -250,9 +292,8 @@ const RichTextEditor = () => {
             {editor?.storage.characterCount.characters()}/35,000 characters
           </div>
 
-          <div className="flex justify-end gap-4 pt-4">
-            <button onClick={handlePreview} className="bg-gray-200 text-gray-700 px-5 py-2 rounded-md">Preview</button>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">Submit</button>
+          <div className="flex justify-end">
+            <button onClick={handleSubmit} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">Save Post</button>
           </div>
         </div>
       </div>

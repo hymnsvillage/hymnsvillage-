@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   const supabase = createSupabaseServerClient();
 
-  const { data, error } = await supabase.auth.updateUser({
+  const { data, error } = await (await supabase).auth.updateUser({
     password: parsed.data.newPassword,
   });
   if (error)

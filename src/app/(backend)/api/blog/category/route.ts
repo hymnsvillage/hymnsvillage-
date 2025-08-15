@@ -2,7 +2,7 @@ import {
   createSupabaseServerClient,
   customResponse,
 } from "@/app/(backend)/lib";
-import { cleanUser, RawUser } from "@/app/(backend)/lib/cleanUser";
+
 import { categoryInputSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || cleanUser(user as RawUser)?.userRole !== "admin") {
+  if (!user ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
