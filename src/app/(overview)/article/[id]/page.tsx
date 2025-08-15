@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 
-export default async function ArticlePage({ params }: { params: { id: string } }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blog/${params.id}`, {
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blog/${id}`, {
     cache: "no-store",
   });
 
