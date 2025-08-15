@@ -7,22 +7,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: user } = await supabase.auth.getUser();
 
   const [{ data, error }, { data: impressions }] = await Promise.all([
-    supabase
-      .from("hymns")
-      .select("*, categories(*)")
-      .eq("id", params.id)
-      .single(),
+    supabase.from("hymns").select("*, categories(*)").eq("id", id).single(),
     supabase
       .from("impressions")
       .select("id")
       .eq("target_type", "hymn")
-      .eq("target_id", params.id)
+      .eq("target_id", id)
       .eq("viewer_id", user.user?.id || "")
       .maybeSingle(),
   ]);
@@ -36,8 +33,9 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -60,7 +58,7 @@ export async function PUT(
   const { error } = await supabase
     .from("hymns")
     .update(parsed.data)
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -70,8 +68,9 @@ export async function PUT(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -81,7 +80,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { error } = await supabase.from("hymns").delete().eq("id", params.id);
+  const { error } = await supabase.from("hymns").delete().eq("id", id);
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 

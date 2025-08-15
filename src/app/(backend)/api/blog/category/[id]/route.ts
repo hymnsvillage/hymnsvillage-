@@ -7,8 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -30,7 +31,7 @@ export async function PUT(
   const { error } = await supabase
     .from("categories")
     .update(parsed.data)
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -42,8 +43,9 @@ export async function PUT(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -53,10 +55,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { error } = await supabase
-    .from("categories")
-    .delete()
-    .eq("id", params.id);
+  const { error } = await supabase.from("categories").delete().eq("id", id);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });

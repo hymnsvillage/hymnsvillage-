@@ -1,4 +1,7 @@
-import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
+import {
+  createSupabaseServerClient,
+  customResponse,
+} from "@/app/(backend)/lib";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -8,8 +11,9 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -17,7 +21,7 @@ export async function POST(
 
   const { error } = await supabase.from("impressions").insert({
     target_type: "blog",
-    target_id: params.id,
+    target_id: id,
     viewer_id: user?.id ?? null,
   });
 

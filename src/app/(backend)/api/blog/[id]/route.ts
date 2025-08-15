@@ -8,8 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 // GET single blog post with media
 export async function GET(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
   const { data: user } = await supabase.auth.getUser();
@@ -18,13 +19,13 @@ export async function GET(
     supabase
       .from("blogs")
       .select("*, categories(*), tags(*), blog_media(*)")
-      .eq("id", params.id)
+      .eq("id", id)
       .single(),
     supabase
       .from("impressions")
       .select("id")
       .eq("target_type", "blog")
-      .eq("target_id", params.id)
+      .eq("target_id", id)
       .eq("viewer_id", user.user?.id || "")
       .maybeSingle(),
   ]);
@@ -40,8 +41,9 @@ export async function GET(
 // PUT to update blog and its media
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -53,7 +55,7 @@ export async function PUT(
   const { data: existing } = await supabase
     .from("blogs")
     .select("author_id")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const isOwner = user.id === existing?.author_id;
@@ -78,27 +80,27 @@ export async function PUT(
   const { error: updateError } = await supabase
     .from("blogs")
     .update({ title, content, category_id: categoryId })
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (updateError)
     return NextResponse.json({ error: updateError.message }, { status: 500 });
 
   // 2. Update blog tags (optional: you could diff instead)
-  await supabase.from("blog_tags").delete().eq("blog_id", params.id);
+  await supabase.from("blog_tags").delete().eq("blog_id", id);
   if (tags) {
     for (const tagId of tags) {
       await supabase.from("blog_tags").insert({
-        blog_id: params.id,
+        blog_id: id,
         tag_id: tagId,
       });
     }
   }
 
   // // 3. Update blog media
-  // await supabase.from("blog_media").delete().eq("blog_id", params.id);
+  // await supabase.from("blog_media").delete().eq("blog_id", id);
   // for (const url of mediaUrls) {
   //   await supabase.from("blog_media").insert({
-  //     blog_id: params.id,
+  //     blog_id: id,
   //     url,
   //   });
   // }
@@ -109,8 +111,9 @@ export async function PUT(
 // DELETE blog
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -122,7 +125,7 @@ export async function DELETE(
   const { data: blog } = await supabase
     .from("blogs")
     .select("author_id")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const isOwner = user.id === blog?.author_id;
@@ -131,7 +134,7 @@ export async function DELETE(
   if (!isOwner && !isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { error } = await supabase.from("blogs").delete().eq("id", params.id);
+  const { error } = await supabase.from("blogs").delete().eq("id", id);
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 

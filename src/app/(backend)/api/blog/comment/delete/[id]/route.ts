@@ -1,10 +1,14 @@
-import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
+import {
+  createSupabaseServerClient,
+  customResponse,
+} from "@/app/(backend)/lib";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -16,7 +20,7 @@ export async function DELETE(
   const { data: comment } = await supabase
     .from("comments")
     .select("user_id")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const isOwner = user.id === comment?.user_id;
@@ -25,10 +29,7 @@ export async function DELETE(
   if (!isOwner && !isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { error } = await supabase
-    .from("comments")
-    .delete()
-    .eq("id", params.id);
+  const { error } = await supabase.from("comments").delete().eq("id", id);
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
