@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/supabase/client";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { supabase } from '@/supabase/client'
+import { useEffect, useState } from "react";
 
 // ✅ Define the Hymn type
 type Hymn = {
@@ -26,8 +26,7 @@ export default function ManageHymns() {
 useEffect(() => {
   async function fetchHymns() {
      
-    const { data } = await supabase.from('hymns').select('*');
-    console.log('Fetched hymns:', data);
+    const { data } = await supabase.from("hymns").select("*");
     setHymns(data || []);
   }
 

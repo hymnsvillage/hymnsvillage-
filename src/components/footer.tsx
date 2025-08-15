@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 // import { FaFacebookF, FaXTwitter, FaYoutube, FaLinkedinIn } from 'react-icons/fa6';
-import SocialLinks from './SocialLinks';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaRegUser } from 'react-icons/fa';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import Link from "next/link";
+import { FaRegUser } from "react-icons/fa";
+import SocialLinks from "./SocialLinks";
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
 
   return (
     <footer
@@ -31,7 +31,6 @@ const Footer = () => {
             className=" flex items-center gap-4 bg-white/5 border border-white/20 rounded-full px-4 py-2 w-full sm:w-auto "
             onSubmit={(e) => {
               e.preventDefault();
-              console.log('Subscribed with:', email);
             }}
           >
             {/* <span className="pl-2 text-white ">🔍</span> */}
@@ -46,11 +45,11 @@ const Footer = () => {
               required
               className="flex-1 text-sm border-none"
             />
-            <Button 
+            <Button
               type="submit"
-              className='bg-white text-black rounded-2xl hover:bg-black hover:text-white'
+              className="bg-white text-black rounded-2xl hover:bg-black hover:text-white"
             >
-             Subscribe
+              Subscribe
             </Button>
           </form>
         </div>
@@ -60,18 +59,19 @@ const Footer = () => {
           {/* Logo + About */}
           <div>
             <div className="flex items-center justify-center md:items-start md:justify-start gap-2 mb-4 cursor-pointer">
-              <Image 
-                src="/logo.png" 
-                alt="Hymns Village" 
+              <Image
+                src="/logo.png"
+                alt="Hymns Village"
                 width={500}
                 height={100}
-                className="w-10 h-10 rounded-full" 
+                className="w-10 h-10 rounded-full"
               />
               <h3 className="text-lg font-semibold">Hymns Village</h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Hymns Village emerged from a vision to establish a preeminent online destination where
-              the rich tapestry of hymnody and insightful theological discourse converge.
+              Hymns Village emerged from a vision to establish a preeminent
+              online destination where the rich tapestry of hymnody and
+              insightful theological discourse converge.
             </p>
             {/* <p className="mt-6 text-xs text-gray-400">ALL RIGHT RESERVED 2025</p> */}
           </div>
@@ -80,12 +80,24 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3">Navigations</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link href="/">Home</Link></li>
-              <li><Link href="/about">About</Link></li>
-              <li><Link href="/blog">Blog</Link></li>
-              <li><Link href="/hymns">Hymns</Link></li>
-              <li><Link href="/contact">Contact us</Link></li>
-              <li><Link href="/login">Sign up / Log in</Link></li>
+              <li>
+                <Link href="/">Home</Link>
+              </li>
+              <li>
+                <Link href="/about">About</Link>
+              </li>
+              <li>
+                <Link href="/blog">Blog</Link>
+              </li>
+              <li>
+                <Link href="/hymns">Hymns</Link>
+              </li>
+              <li>
+                <Link href="/contact">Contact us</Link>
+              </li>
+              <li>
+                <Link href="/login">Sign up / Log in</Link>
+              </li>
             </ul>
           </div>
 
@@ -93,17 +105,25 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3">Resources</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link href="/blog">Blog</Link></li>
-              <li><Link href="/hymns">Hymns</Link></li>
-              <li><Link href="/contact">Contact us</Link></li>
-              <li><Link href="/login">Sign up / Log in</Link></li>
+              <li>
+                <Link href="/blog">Blog</Link>
+              </li>
+              <li>
+                <Link href="/hymns">Hymns</Link>
+              </li>
+              <li>
+                <Link href="/contact">Contact us</Link>
+              </li>
+              <li>
+                <Link href="/login">Sign up / Log in</Link>
+              </li>
             </ul>
           </div>
 
           {/* Social Media */}
           <div>
             <h4 className="font-semibold mb-3">Socials</h4>
-            <div className='flex flex-col items-center md:items-start justify-center gap-4 mt-4'>
+            <div className="flex flex-col items-center md:items-start justify-center gap-4 mt-4">
               {/* <span className="text-sm text-gray-300">Follow us on:</span> */}
               <SocialLinks />
             </div>
@@ -118,14 +138,13 @@ const Footer = () => {
           {/* All Rights Reserved */}
           <div className="w-full py-4">
             <p className="text-gray-300 w-full text-sm">
-              © All rights reserved {" "} {new Date().getFullYear()}.
+              © All rights reserved {new Date().getFullYear()}.
             </p>
           </div>
         </div>
       </div>
     </footer>
   );
-}
+};
 
-export default Footer
-
+export default Footer;

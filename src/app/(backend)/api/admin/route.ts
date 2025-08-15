@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient, customResponse } from "../../lib";
 
 export const POST = async () => {
- try {
+  try {
     const supabase = createSupabaseServerClient();
-    await (await supabase).auth.admin.createUser({
+    await (
+      await supabase
+    ).auth.admin.createUser({
       email: "admin@hymnsvillage.com",
       password: "StrongPassword123!",
       email_confirm: true,
@@ -16,7 +18,7 @@ export const POST = async () => {
         message: "Admin created successfully",
       })
     );
- } catch (error) {
+  } catch (error) {
     console.error(error);
     return NextResponse.json(
       customResponse({
@@ -24,5 +26,5 @@ export const POST = async () => {
         message: "Failed to create an admin",
       })
     );
- }
+  }
 };

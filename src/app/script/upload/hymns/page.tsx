@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { supabase } from '@/supabase/client'
-import english from '@/data/englishHymns.json'
-import efik from '@/data/efikHymns.json'
-import ibibio from '@/data/ibibioHymns.json'
+import efik from "@/data/efikHymns.json";
+import english from "@/data/englishHymns.json";
+import ibibio from "@/data/ibibioHymns.json";
+import { supabase } from "@/supabase/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const formatHymns = (data: any[], category: string) =>
@@ -12,27 +12,26 @@ const formatHymns = (data: any[], category: string) =>
     author: hymn.author,
     lyrics: hymn.lyrics,
     category,
-    date: '2025-07-03', // or use new Date().toISOString()
-  }))
+    date: "2025-07-03", // or use new Date().toISOString()
+  }));
 
 export default function UploadHymns() {
   const handleUpload = async () => {
     const hymns = [
-      ...formatHymns(english, 'English'),
-      ...formatHymns(efik, 'Efik'),
-      ...formatHymns(ibibio, 'Ibibio'),
-    ]
+      ...formatHymns(english, "English"),
+      ...formatHymns(efik, "Efik"),
+      ...formatHymns(ibibio, "Ibibio"),
+    ];
 
-    const { data, error } = await supabase.from('hymns').insert(hymns)
+    const { error } = await supabase.from("hymns").insert(hymns);
 
     if (error) {
-      console.error('Upload Error:', error)
-      alert('Failed to upload hymns.')
+      console.error("Upload Error:", error);
+      alert("Failed to upload hymns.");
     } else {
-      console.log('Inserted hymns:', data)
-      alert('Hymns uploaded successfully!')
+      alert("Hymns uploaded successfully!");
     }
-  }
+  };
 
   return (
     <div className="p-6">
@@ -43,5 +42,5 @@ export default function UploadHymns() {
         Upload Hymns
       </button>
     </div>
-  )
+  );
 }
