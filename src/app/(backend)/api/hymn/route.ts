@@ -13,7 +13,7 @@ import { handleMediaUpload } from "../../lib/handleFileUpload";
 import { orderResponse } from "../../lib/orderResponse";
 
 export async function GET(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: user } = await supabase.auth.getUser();
 
   const { searchParams } = new URL(req.url);
