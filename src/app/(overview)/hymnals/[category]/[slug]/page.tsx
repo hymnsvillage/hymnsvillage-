@@ -1,20 +1,18 @@
-'use client';
-
-import { notFound } from 'next/navigation';
-import english from '@/data/englishHymns.json';
-import efik from '@/data/efikHymns.json';
-import ibibio from '@/data/ibibioHymns.json';
-import Image from 'next/image';
-import SocialIcons from '@/components/SocialLinks'; // ← Update path as needed
+import SocialIcons from "@/components/SocialLinks"; // ← Update path as needed
+import efik from "@/data/efikHymns.json";
+import english from "@/data/englishHymns.json";
+import ibibio from "@/data/ibibioHymns.json";
+import Image from "next/image";
+import { notFound } from "next/navigation";
 
 const slugify = (title: string) =>
   title
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, "-")
     .trim();
 
-type Category = 'english' | 'efik' | 'ibibio';
+type Category = "english" | "efik" | "ibibio";
 
 const allHymns: Record<Category, typeof english> = {
   english,
@@ -22,17 +20,17 @@ const allHymns: Record<Category, typeof english> = {
   ibibio,
 };
 
-export default function HymnDetailPage({
+export default async function HymnDetailPage({
   params,
 }: {
-  params: { category: string; slug: string };
+  params: Promise<{ category: Category; slug: string }>;
 }) {
-  const rawCategory = params.category.toLowerCase();
-  if (!['english', 'efik', 'ibibio'].includes(rawCategory)) return notFound();
-  const category = rawCategory as Category;
+  const { category, slug } = await params;
+  const rawCategory = category.toLowerCase();
+  if (!["english", "efik", "ibibio"].includes(rawCategory)) return notFound();
 
   const hymns = allHymns[category];
-  const hymn = hymns.find((h) => slugify(h.title) === params.slug);
+  const hymn = hymns.find((h) => slugify(h.title) === slug);
   if (!hymn) return notFound();
 
   return (
@@ -100,7 +98,9 @@ export default function HymnDetailPage({
 
             {/* Social Icons */}
             <div className="mt-6">
-              <p className="text-sm text-gray-700 font-medium mb-2">Our socials</p>
+              <p className="text-sm text-gray-700 font-medium mb-2">
+                Our socials
+              </p>
               <SocialIcons />
             </div>
           </div>
