@@ -1,6 +1,6 @@
 'use client';
 
-import React, { JSX, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -27,6 +27,7 @@ import {
   Heading2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Youtube as YoutubeIcon,
   Code, Highlighter, Quote, Minus, Eraser, Eye
 } from 'lucide-react';
+
 
 type OptionType = { value: string; label: string };
 type Category = { id: string; name: string };
@@ -73,40 +74,48 @@ const RichTextEditor = () => {
     content: '',
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
       const [catRes, tagRes] = await Promise.all([
-        axios.get('/api/category'),
-        axios.get('/api/tag')
+        axios.get('/api/blog/category'),
+         axios.get('/api/blog/tag'),
       ]);
-      setCategories(catRes.data);
-      setTags(tagRes.data);
-    };
-    fetchData();
-  }, []);
+
+      setCategories(Array.isArray(catRes.data?.data?.categories) ? catRes.data.data.categories : []);
+
+      setTags(Array.isArray(tagRes.data?.data?.tags) ? tagRes.data.data.tags : []);
+
+    } catch (error) {
+      console.error('Error fetching categories/tags', error);
+      setCategories([]);
+      setTags([]);
+    }
+  };
+  fetchData();
+}, []);
+
 
   useEffect(() => {
     setSlug(slugify(title, { lower: true, strict: true }));
     setMetaTitle(title);
   }, [title]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await axios.post('/api/upload/media', formData);
-      setFeaturedImage(res.data.url);
-      toast.success('Image uploaded!');
-    } catch {
-      toast.error('Image upload failed.');
-    }
+   
+  const handleImagePreview = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    setFeaturedImage(reader.result as string);
   };
+  reader.readAsDataURL(file);
+};
+
 
   const handleCreateCategory = async (inputValue: string) => {
     try {
-      const res = await axios.post('/api/category', { name: inputValue });
+      const res = await axios.post('/api/blog/category', { name: inputValue });
       const newCat = res.data;
       setCategories(prev => [...prev, newCat]);
       setCategory({ value: newCat.id, label: newCat.name });
@@ -118,7 +127,7 @@ const RichTextEditor = () => {
 
   const handleCreateTag = async (inputValue: string) => {
     try {
-      const res = await axios.post('/api/tag', { name: inputValue });
+      const res = await axios.post('/api/blog/tag', { name: inputValue });
       const newTag = res.data;
       setTags(prev => [...prev, newTag]);
       setSelectedTags(prev => [...prev, { value: newTag.id, label: newTag.name }]);
@@ -128,40 +137,61 @@ const RichTextEditor = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!title || !editor || !category) return toast.error('Fill all required fields');
+ const handleSubmit = async () => {
+  if (!title || !editor) return toast.error('Title and content are required');
 
-    try {
-      await axios.post('/api/blog', {
-        title,
-        slug,
-        content: editor.getHTML(),
-        categoryId: category.value,
-        tagIds: selectedTags.map(t => t.value),
-        featuredImage,
-        altText,
-        metaTitle,
-        metaDescription,
-        canonicalUrl
-      });
-      toast.success('Post created successfully');
-      setTitle('');
-      setSlug('');
-      setMetaTitle('');
-      setMetaDescription('');
-      setCanonicalUrl('');
-      editor.commands.clearContent();
-      setCategory(null);
-      setSelectedTags([]);
-      setFeaturedImage(null);
-      setAltText('');
-    } catch {
-      toast.error('Failed to create post');
+  try {
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('slug', slug);
+    formData.append('content', editor.getHTML());
+    formData.append('metaTitle', metaTitle);
+    formData.append('metaDescription', metaDescription);
+    formData.append('canonicalUrl', canonicalUrl);
+    formData.append('altText', altText);
+
+    // Only append if category exists
+    if (category?.value) {
+      formData.append('categoryId', category.value);
     }
-  };
+
+    // Only append if tags are selected
+    selectedTags.forEach((tag, index) => {
+      formData.append(`tagIds[${index}]`, tag.value);
+    });
+
+    // Append image file if selected
+    const fileInput = fileInputRef.current;
+    const file = fileInput?.files?.[0];
+    if (file) {
+      formData.append('file', file);
+    }
+
+    await axios.post('/api/blog', formData);
+
+    toast.success('Post created successfully');
+
+    // Reset form
+    setTitle('');
+    setSlug('');
+    setMetaTitle('');
+    setMetaDescription('');
+    setCanonicalUrl('');
+    editor.commands.clearContent();
+    setCategory(null);
+    setSelectedTags([]);
+    setFeaturedImage(null);
+    setAltText('');
+    if (fileInput?.value) fileInput.value = '';
+  } catch (err) {
+    console.error(err);
+    toast.error('Failed to create post');
+  }
+};
+
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const toolbarButtons: [string, () => JSX.Element, any?][] = [
+  const toolbarButtons: [string, () => React.JSX.Element, any?][] = [
     ['toggleBold', () => <Bold size={16} />],
     ['toggleItalic', () => <Italic size={16} />],
     ['toggleUnderline', () => <UnderlineIcon size={16} />],
@@ -206,7 +236,8 @@ const RichTextEditor = () => {
 
           <div onClick={() => fileInputRef.current?.click()} className="border border-dashed p-4 text-center cursor-pointer bg-gray-50">
             <ImageIcon className="mx-auto mb-2" /> Click to upload
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePreview} />
+
           </div>
 
           {featuredImage && (
@@ -216,23 +247,23 @@ const RichTextEditor = () => {
             </div>
           )}
 
-          <CreatableSelect
-            isClearable
-            onChange={setCategory}
-            onCreateOption={handleCreateCategory}
-            options={categories.map(c => ({ value: c.id, label: c.name }))}
-            value={category}
-            placeholder="Select or create category"
-          />
-
-          <CreatableSelect
-             isMulti
-            onChange={(newValue) => setSelectedTags(newValue as OptionType[])}
-            onCreateOption={handleCreateTag}
-            options={tags.map(t => ({ value: t.id, label: t.name }))}
-            value={selectedTags}
-            placeholder="Select or create tags"
+         <CreatableSelect
+               isClearable
+                onChange={setCategory}
+               onCreateOption={handleCreateCategory}
+                options={(categories || []).map(c => ({ value: c.id, label: c.name }))}
+                value={category}
+              placeholder="Select or create category"
             />
+
+            <CreatableSelect
+                isMulti
+                onChange={(newValue) => setSelectedTags(newValue as OptionType[])}
+                onCreateOption={handleCreateTag}
+                options={(tags || []).map(t => ({ value: t.id, label: t.name }))}
+                value={selectedTags}
+                placeholder="Select or create tags"
+              />
 
         </div>
 
@@ -240,14 +271,13 @@ const RichTextEditor = () => {
           <div className="flex flex-wrap gap-2">
             {toolbarButtons.map(([command, Icon, value]) => (
               <button
-                 key={value}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                   onClick={() => (editor?.chain().focus() as any)[command](value).run()}
-                   className="btn"
-                    >
-                   {Icon ()}
-                </button>
-
+                key={command + (value ?? '')}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={() => (editor?.chain().focus() as any)[command](value).run()}
+                className="btn"
+              >
+                {Icon()}
+              </button>
             ))}
             <button onClick={() => fileInputRef.current?.click()} className="btn"><ImageIcon size={16} /></button>
             <button onClick={() => {

@@ -4,7 +4,7 @@ import { createSupabaseServerClient, customResponse } from "../../lib";
 export const POST = async () => {
  try {
     const supabase = createSupabaseServerClient();
-    await supabase.auth.admin.createUser({
+    await (await supabase).auth.admin.createUser({
       email: "admin@hymnsvillage.com",
       password: "StrongPassword123!",
       email_confirm: true,

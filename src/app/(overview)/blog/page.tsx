@@ -1,8 +1,7 @@
 'use client'
-
-import RecentPosts from '@/components/blog/BlogGridSection'
 import BlogHeroBanner from '@/components/blog/BlogHeroBanner'
-import BlogSearchSection from '@/components/blog/BlogSearchSection'
+import DiscoverInsights from '@/components/blog/DiscoveInsight'
+import RecentPosts from '@/components/blog/RecentPost'
 import RecommendedBlog from '@/components/blog/RecomendedBlog'
 import SearchBar from '@/components/blog/SearchBar'
 import React from 'react'
@@ -13,7 +12,7 @@ function Blogpage() {
     <div>
         <BlogHeroBanner />
         <SearchBar />
-         <BlogSearchSection />
+        <DiscoverInsights />
        < RecentPosts />
        <RecommendedBlog />
     </div>

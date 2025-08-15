@@ -59,7 +59,7 @@ export default function SignupForm() {
         name: `${firstName} ${lastName}`,
         username,
         password,
-        role: "user",
+        role: "admin",
       });
 
       if (result.data.success) {
