@@ -7,9 +7,9 @@ const allowedProviders: Provider[] = ["google"];
 
 export async function GET(
   _req: Request,
-  { params }: { params: { provider: string } }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
-  const provider = params.provider.toLowerCase();
+  const provider = (await params).provider.toLowerCase();
 
   // Validate provider
   if (!allowedProviders.includes(provider as Provider)) {
@@ -19,7 +19,7 @@ export async function GET(
     );
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { url },
