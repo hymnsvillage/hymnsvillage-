@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { hymnId: string } }
+  { params }: { params: Promise<{ hymnId: string }> }
 ) {
+  const { hymnId } = await params;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("hymn_comments")
     .select("*")
-    .eq("hymn_id", params.hymnId);
+    .eq("hymn_id", hymnId);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -18,8 +19,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { hymnId: string } }
+  { params }: { params: Promise<{ hymnId: string }> }
 ) {
+  const { hymnId } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -32,7 +34,7 @@ export async function POST(
   const { content } = body;
 
   const { error } = await supabase.from("hymn_comments").insert({
-    hymn_id: params.hymnId,
+    hymn_id: hymnId,
     user_id: user.id,
     content,
   });

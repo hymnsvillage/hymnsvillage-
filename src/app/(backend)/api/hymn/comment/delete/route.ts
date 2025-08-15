@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { commentId: string } }
+  { params }: { params: Promise<{ commentId: string }> }
 ) {
+  const { commentId } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -13,7 +14,7 @@ export async function DELETE(
   const { data: comment } = await supabase
     .from("hymn_comments")
     .select("user_id")
-    .eq("id", params.commentId)
+    .eq("id", commentId)
     .single();
 
   const isOwner = user?.id === comment?.user_id;
@@ -25,7 +26,7 @@ export async function DELETE(
   const { error } = await supabase
     .from("hymn_comments")
     .delete()
-    .eq("id", params.commentId);
+    .eq("id", commentId);
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 

@@ -1,16 +1,20 @@
-import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
+import {
+  createSupabaseServerClient,
+  customResponse,
+} from "@/app/(backend)/lib";
 import { commentInputSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
+  const { postId } = await params;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("comments")
     .select("*, users(email)")
-    .eq("post_id", params.postId)
+    .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
   if (error)
@@ -20,8 +24,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
+  const { postId } = await params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -42,7 +47,7 @@ export async function POST(
     .from("comments")
     .insert({
       content: parsed.data.content,
-      post_id: params.postId,
+      post_id: postId,
       user_id: user.id,
     })
     .select()
