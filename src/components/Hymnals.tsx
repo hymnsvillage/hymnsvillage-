@@ -1,46 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Image from "next/image";
-
-type Hymn = {
-  id: string;
-  title: string;
-  author: string;
-  lyrics: string;
-  number: number;
-  language: string;
-  created_at: string;
-  hymn_categories?: { name: string };
-  hymn_media?: { id: string; url: string; type: string }[];
-};
+import Image from 'next/image';
 
 export default function HymnalPage() {
-  const [hymns, setHymns] = useState<Hymn[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchHymns() {
-      try {
-        const res = await fetch("/api/hymns?page=1&limit=10"); // 🔗 connected to your route
-        const json = await res.json();
-        setHymns(json.data.hymns || []);
-      } catch (err) {
-        console.error("Error fetching hymns:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchHymns();
-  }, []);
-
-  if (loading) {
-    return <p className="text-center text-white">Loading hymns...</p>;
-  }
+  const hymns = [
+    { src: '/hymn-image-1.jpg', author: 'Dennis Cooper', title: 'The Life - Giving Spirit', date: 'January 3, 2025' },
+    { src: '/hymn-image-2.jpg', author: 'Emilyn Sutherland', title: 'The Life - Giving Spirit', date: 'January 3, 2025' },
+    { src: '/hymn-image-3.jpg', author: 'Leonel Edwards', title: 'The Life - Giving Spirit', date: 'January 3, 2025' },
+  ];
 
   return (
     <section className="relative overflow-hidden">
       <main className="relative bg-black min-h-screen text-white">
+
         {/* Background image */}
         <Image
           src="/hymnal.jpg"
@@ -56,7 +26,7 @@ export default function HymnalPage() {
               Discover Sacred Songs: Explore Our Collection of Hymns
             </h1>
             <p className="text-[14px] md:text-lg mb-10 text-center">
-              Explore a curated digital sanctuary of English and Efik hymns, alongside insightful articles that resonate with the heart of faith.
+              Explore a curated digital sanctuary of English and Efik hymns, alongside insightful articles that resonate with the heart of faith. Join a vibrant community where shared devotion finds harmonious expression.
             </p>
 
             <h2 className="text-xl md:text-2xl font-semibold mb-6">
@@ -64,10 +34,10 @@ export default function HymnalPage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {hymns.map((item) => (
-                <div key={item.id} className="relative group overflow-hidden rounded-xl shadow-lg">
+              {hymns.map((item, idx) => (
+                <div key={idx} className="relative group overflow-hidden rounded-xl shadow-lg">
                   <Image
-                    src={item.hymn_media?.[0]?.url || "/default-hymn.jpg"} // fallback if no image
+                    src={item.src}
                     alt={item.title}
                     width={400}
                     height={400}
@@ -79,7 +49,6 @@ export default function HymnalPage() {
                     <button
                       aria-label={`Play hymn: ${item.title}`}
                       className="w-16 h-16 bg-white text-black rounded-full text-2xl font-bold flex items-center justify-center shadow-lg cursor-pointer"
-                      onClick={() => alert(`Play ${item.title}`)} // later we’ll hook to audio/video
                     >
                       ▶
                     </button>
@@ -90,9 +59,7 @@ export default function HymnalPage() {
                   <h3 className="absolute bottom-4 left-2 text-lg font-semibold leading-tight z-10">
                     {item.title}
                   </h3>
-                  <p className="absolute bottom-2 left-2 text-sm text-white z-10">
-                    {new Date(item.created_at).toLocaleDateString()}
-                  </p>
+                  <p className="absolute bottom-2 left-2 text-sm text-white z-10">{item.date}</p>
                 </div>
               ))}
             </div>
