@@ -21,7 +21,11 @@ const navItems = [
   { label: "Log Out", icon: LogOut, href: "/dashboard/user/logout" },
 ];
 
-export default function UserSidebar() {
+export default function UserSidebar({
+  closeSidebar,
+}: {
+  closeSidebar?: () => void;
+}) {
   return (
     <aside className="w-64 h-screen bg-white border-r-1 p-5 border-t-4">
       <nav className="flex flex-col space-y-6 ">
@@ -29,6 +33,7 @@ export default function UserSidebar() {
           <Link
             key={item.label}
             href={item.href}
+            onClick={() => closeSidebar?.()} // closes sidebar on mobile
             className="flex items-center gap-3 text-gray-700 hover:text-black text-sm font-medium"
           >
             <item.icon className="w-5 h-5" />

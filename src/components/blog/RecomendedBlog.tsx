@@ -1,3 +1,6 @@
+
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -6,27 +9,77 @@ import {
   FaLinkedinIn,
   FaInstagram,
 } from "react-icons/fa6";
+import { useEffect, useState } from "react";
 
-const featuredArticle = {
-  title: "Riding the Quantum Wave: A Deep Dive into Quantum Computing",
-  description:
-    "Unravel the mysteries of quantum computing and understand its potential impact on the digital landscape",
-  category1: "Machine",
-  category2: "Technology",
-  slug: "quantum-computing",
-  image: "/Rectangle 1 (1).png"
-};
+interface Blog {
+  id: string;
+  title: string;
+  content: string;
+  category_id: string;
+  slug: string;
+  blog_media: Array<{ url: string }>;
+  blog_categories: { name: string };
+  created_at: string;
+  author_name?: string;
+}
 
 export default function RecommendedSection() {
+  const [featuredArticle, setFeaturedArticle] = useState<Blog | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchFeaturedArticle() {
+      try {
+        const res = await fetch('/api/blog/recent');
+        const result = await res.json();
+        if (result.success && result.data.blogs.length > 0) {
+          // Get the first blog as featured
+          setFeaturedArticle(result.data.blogs[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch featured article:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchFeaturedArticle();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="bg-white px-6 md:px-16 py-8">
+        <h2 className="text-lg font-semibold mb-4">Recommended</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+          <div className="bg-gray-200 animate-pulse rounded-xl h-96"></div>
+          <div className="bg-gray-200 animate-pulse rounded-xl h-96"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredArticle) {
+    return (
+      <section className="bg-white px-6 md:px-16 py-8">
+        <h2 className="text-lg font-semibold mb-4">Recommended</h2>
+        <p>No featured articles available.</p>
+      </section>
+    );
+  }
+
+  const imageUrl = featuredArticle.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+  const description = featuredArticle.content.substring(0, 150) + "...";
+  const categoryName = featuredArticle.blog_categories?.name || "Technology";
+
   return (
     <section className="bg-white px-6 md:px-16 py-8">
       <h2 className="text-lg font-semibold mb-4">Recommended</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Left - Featured Article */}
-        <Link href={`/article/${featuredArticle.slug}`}>
+        <Link href={`/article/${featuredArticle.id}`}>
           <div className="relative rounded-xl overflow-hidden cursor-pointer group">
             <Image
-              src={featuredArticle.image}
+              src={imageUrl}
               alt={featuredArticle.title}
               width={800}
               height={400}
@@ -36,17 +89,17 @@ export default function RecommendedSection() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 flex flex-col justify-end text-white">
               <div className="flex space-x-2 mb-2">
                 <span className="bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-full">
-                  {featuredArticle.category1}
+                  {categoryName}
                 </span>
                 <span className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                  {featuredArticle.category2}
+                  Featured
                 </span>
               </div>
               <h3 className="text-xl font-bold leading-tight group-hover:underline">
                 {featuredArticle.title}
               </h3>
               <p className="text-sm mt-1 text-gray-200 line-clamp-2">
-                {featuredArticle.description}
+                {description}
               </p>
               <div className="flex items-center text-xs mt-3 text-gray-300">
                 <Image
@@ -56,7 +109,7 @@ export default function RecommendedSection() {
                   height={24}
                   className="rounded-full mr-2"
                 />
-                Hidden • 1 hour ago • 5 min read • 👁️ 630
+                {featuredArticle.author_name || "Author"} • {new Date(featuredArticle.created_at).toLocaleDateString()} • 5 min read • 👁️ 630
               </div>
             </div>
           </div>
@@ -84,3 +137,6 @@ export default function RecommendedSection() {
     </section>
   );
 }
+
+
+      
