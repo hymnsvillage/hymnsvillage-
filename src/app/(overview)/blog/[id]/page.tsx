@@ -14,13 +14,9 @@ async function trackBlogView(blogId: string) {
   }
 }
 
-export default async function BlogDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function BlogDetailPage({ params }: { params: { id: string } }) {
   // Fetch blog data
-  const blog = await getBlogBySlug(params.slug);
+  const blog = await getBlogBySlug(params.id);
 
   // If blog not found, return 404
   if (!blog) {
