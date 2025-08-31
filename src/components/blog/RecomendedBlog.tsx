@@ -3,13 +3,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   FaFacebookF,
-  FaXTwitter,
-  FaLinkedinIn,
   FaInstagram,
+  FaLinkedinIn,
+  FaXTwitter,
 } from "react-icons/fa6";
-import { useEffect, useState } from "react";
 
 interface Blog {
   id: string;
@@ -76,7 +76,7 @@ export default function RecommendedSection() {
       <h2 className="text-lg font-semibold mb-4">Recommended</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Left - Featured Article */}
-        <Link href={`/article/${featuredArticle.id}`}>
+        <Link href={`/blog/${featuredArticle.id}`}>
           <div className="relative rounded-xl overflow-hidden cursor-pointer group">
             <Image
               src={imageUrl}
@@ -109,7 +109,9 @@ export default function RecommendedSection() {
                   height={24}
                   className="rounded-full mr-2"
                 />
-                {featuredArticle.author_name || "Author"} • {new Date(featuredArticle.created_at).toLocaleDateString()} • 5 min read • 👁️ 630
+                {featuredArticle.author_name || "Author"} •{" "}
+                {new Date(featuredArticle.created_at).toLocaleDateString()} • 5
+                min read • 👁️ 630
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
-'use client'
-import { notFound } from "next/navigation";
+"use client";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 // Track blog view
 async function trackBlogView(blogId: string) {
@@ -35,20 +35,25 @@ export default async function BlogDetailPage({
   // in a real-world scenario (e.g., within a Client Component wrapper).
   // In this specific case, since it's a server component, we'll simulate the tracking by
   // calling it directly, but be aware of the implications in a full client-side context.
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     trackBlogView(blog.id);
   }
-
 
   return (
     <div className="container mx-auto px-4 py-12">
       <header className="mb-8">
-        <Link href="/blog" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+        <Link
+          href="/blog"
+          className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+        >
           &larr; Back to Blog
         </Link>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{blog.title}</h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          {blog.title}
+        </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          By {blog.author.name} | {new Date(blog.createdAt).toLocaleDateString()}
+          By {blog.author.name} |{" "}
+          {new Date(blog.createdAt).toLocaleDateString()}
         </p>
       </header>
 
@@ -66,7 +71,9 @@ export default async function BlogDetailPage({
 
       {blog.tags && blog.tags.length > 0 && (
         <div className="mt-12">
-          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Tags</h3>
+          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+            Tags
+          </h3>
           <div className="flex flex-wrap gap-2">
             {blog.tags.map((tag) => (
               <Link
@@ -101,7 +108,8 @@ async function getBlogBySlug(slug: string) {
       id: "1",
       slug: "how-to-learn-nextjs",
       title: "How to Learn Next.js",
-      content: "<p>Next.js is a great framework for building React applications...</p>",
+      content:
+        "<p>Next.js is a great framework for building React applications...</p>",
       imageUrl: "/images/blog-post-1.jpg",
       createdAt: "2023-10-26T10:00:00Z",
       author: { name: "John Doe" },
@@ -111,7 +119,8 @@ async function getBlogBySlug(slug: string) {
       id: "2",
       slug: "understanding-react-hooks",
       title: "Understanding React Hooks",
-      content: "<p>React Hooks are functions that let you hook into React state and lifecycle features...</p>",
+      content:
+        "<p>React Hooks are functions that let you hook into React state and lifecycle features...</p>",
       imageUrl: "/images/blog-post-2.jpg",
       createdAt: "2023-10-25T10:00:00Z",
       author: { name: "Jane Smith" },
@@ -130,7 +139,7 @@ async function getBlogBySlug(slug: string) {
   ];
 
   // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
-  return dummyBlogs.find(blog => blog.slug === slug) || null;
+  return dummyBlogs.find((blog) => blog.slug === slug) || null;
 }
