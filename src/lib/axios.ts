@@ -1,12 +1,11 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "/api",
+  baseURL: `${process.env.NEXT_PUBLIC_APP_URL}/api`, 
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // include cookies for Supabase session
+  withCredentials: true,
 });
 
 export { client };
-

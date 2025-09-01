@@ -1,141 +1,141 @@
-"use client";
+import { client } from "@/lib";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
-// Track blog view
-async function trackBlogView(blogId: string) {
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blog/${blogId}/view`, {
-      method: "POST",
-    });
-  } catch (error) {
-    console.error("Failed to track view:", error);
-  }
+interface Blog {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  blog_media: { url: string }[];
+  blog_categories: { name: string };
 }
 
-export default async function BlogDetailPage({ params }: { params: { id: string } }) {
-  // Fetch blog data
-  const blog = await getBlogBySlug(params.id);
+export default async function BlogPostPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { id } = params;
 
-  // If blog not found, return 404
-  if (!blog) {
-    notFound();
-  }
+  // ✅ Axios GET request
+  const res = await client.get(`/blog/${id}`);
+  console.log("Blog API response:", res.data);
 
-  // Track blog view on component mount
-  // Note: This is a client-side effect, so we need to use useEffect.
-  // However, the component is async, so we can't directly use useEffect here.
-  // A common pattern is to use a separate client component or a ref to trigger the effect.
-  // For simplicity, we'll call the tracking function directly, assuming it's handled appropriately
-  // in a real-world scenario (e.g., within a Client Component wrapper).
-  // In this specific case, since it's a server component, we'll simulate the tracking by
-  // calling it directly, but be aware of the implications in a full client-side context.
-  if (typeof window !== "undefined") {
-    trackBlogView(blog.id);
-  }
+  // ✅ Handle customResponse wrapper or direct data
+  const post: Blog = res.data.data || res.data;
+
+  // ✅ Fetch recent posts (using fetch, since it's from another endpoint)
+  const recentRes = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/blog/recent`,
+    { cache: "no-store" }
+  );
+  const recentJson = await recentRes.json();
+  const recentPosts: Blog[] = recentJson?.data || [];
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <header className="mb-8">
-        <Link
-          href="/blog"
-          className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
-        >
-          &larr; Back to Blog
-        </Link>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          {blog.title}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          By {blog.author.name} |{" "}
-          {new Date(blog.createdAt).toLocaleDateString()}
-        </p>
-      </header>
+    <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-3 gap-10">
+      {/* LEFT: Blog content */}
+      <article className="lg:col-span-2">
+        {/* Category */}
+        <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm">
+          {post.blog_categories?.name}
+        </span>
 
-      <article className="prose lg:prose-xl max-w-none dark:prose-invert">
-        <Image
-          src={blog.imageUrl}
-          alt={blog.title}
-          width={1200}
-          height={600}
-          className="mb-8 rounded-lg shadow-md w-full"
-          priority
+        {/* Title */}
+        <h1 className="mt-4 text-4xl font-bold">{post.title}</h1>
+
+        {/* Meta info */}
+        <div className="flex items-center gap-4 mt-3 text-gray-500 text-sm">
+          <span>
+            Published • {new Date(post.created_at).toLocaleDateString()}
+          </span>
+        </div>
+
+        {/* Featured Image */}
+        {post.blog_media?.length > 0 && (
+          <div className="my-6">
+            <Image
+              src={post.blog_media[0].url}
+              alt={post.title}
+              width={800}
+              height={400}
+              className="rounded-lg object-cover"
+            />
+          </div>
+        )}
+
+        {/* Blog body */}
+        <div
+          className="mt-8 prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: post.content }}
         />
-        <div dangerouslySetInnerHTML={{ __html: blog.content }} />
       </article>
 
-      {blog.tags && blog.tags.length > 0 && (
-        <div className="mt-12">
-          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-            Tags
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {blog.tags.map((tag) => (
-              <Link
-                key={tag.id}
-                href={`/blog/tag/${tag.slug}`}
-                className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 hover:bg-blue-200 dark:hover:bg-blue-300"
-              >
-                {tag.name}
-              </Link>
+      {/* RIGHT: Sidebar */}
+      <aside className="space-y-8">
+        {/* Author Card – placeholder */}
+        <div className="bg-gray-50 p-6 rounded-xl text-center">
+          <Image
+            src={post.blog_media?.[0]?.url || "/placeholder.jpg"}
+            alt={post.title}
+            width={80}
+            height={80}
+            className="rounded-full mx-auto"
+          />
+          <h3 className="mt-4 font-semibold">Author Name</h3>
+          <p className="text-sm text-gray-500">Author bio goes here</p>
+        </div>
+
+        {/* Recent Posts */}
+        <div>
+          <h3 className="font-bold mb-4">Recent posts</h3>
+          <ul className="space-y-4">
+            {recentPosts.map((r) => (
+              <li key={r.id} className="flex items-center gap-4">
+                <Image
+                  src={r.blog_media?.[0]?.url || "/placeholder.jpg"}
+                  alt={r.title}
+                  width={70}
+                  height={50}
+                  className="rounded-lg object-cover"
+                />
+                <Link
+                  href={`/blog/${r.id}`}
+                  className="text-sm font-medium hover:underline"
+                >
+                  {r.title}
+                </Link>
+              </li>
             ))}
+          </ul>
+        </div>
+
+        {/* Socials */}
+        <div>
+          <h3 className="font-bold mb-4">Our socials</h3>
+          <div className="flex gap-3">
+            <Link
+              href="https://facebook.com"
+              className="text-gray-500 hover:text-gray-900"
+            >
+              FB
+            </Link>
+            <Link
+              href="https://twitter.com"
+              className="text-gray-500 hover:text-gray-900"
+            >
+              TW
+            </Link>
+            <Link
+              href="https://instagram.com"
+              className="text-gray-500 hover:text-gray-900"
+            >
+              IG
+            </Link>
           </div>
         </div>
-      )}
-
-      {/* You might want to add a comment section or related posts here */}
+      </aside>
     </div>
   );
-}
-
-// Dummy data fetching functions (replace with your actual data fetching logic)
-async function getBlogBySlug(slug: string) {
-  // Simulate fetching blog data from an API or database
-  // Replace this with your actual data fetching logic
-  // Example:
-  // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blogs?slug=${slug}`);
-  // const blogs = await res.json();
-  // return blogs.find((blog: any) => blog.slug === slug);
-
-  // Dummy data for demonstration:
-  const dummyBlogs = [
-    {
-      id: "1",
-      slug: "how-to-learn-nextjs",
-      title: "How to Learn Next.js",
-      content:
-        "<p>Next.js is a great framework for building React applications...</p>",
-      imageUrl: "/images/blog-post-1.jpg",
-      createdAt: "2023-10-26T10:00:00Z",
-      author: { name: "John Doe" },
-      tags: [{ id: "1", name: "Next.js", slug: "nextjs" }],
-    },
-    {
-      id: "2",
-      slug: "understanding-react-hooks",
-      title: "Understanding React Hooks",
-      content:
-        "<p>React Hooks are functions that let you hook into React state and lifecycle features...</p>",
-      imageUrl: "/images/blog-post-2.jpg",
-      createdAt: "2023-10-25T10:00:00Z",
-      author: { name: "Jane Smith" },
-      tags: [{ id: "2", name: "React", slug: "react" }],
-    },
-    {
-      id: "3",
-      slug: "the-future-of-web-development",
-      title: "The Future of Web Development",
-      content: "<p>Web development is constantly evolving...</p>",
-      imageUrl: "/images/blog-post-3.jpg",
-      createdAt: "2023-10-24T10:00:00Z",
-      author: { name: "Alex Johnson" },
-      tags: [{ id: "3", name: "Web Development", slug: "web-development" }],
-    },
-  ];
-
-  // Simulate a delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  return dummyBlogs.find((blog) => blog.slug === slug) || null;
 }
