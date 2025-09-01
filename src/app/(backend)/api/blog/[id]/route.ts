@@ -5,12 +5,13 @@ import {
 import { blogUpdateSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
+type RouteContext = {
+  params: { id: string };
+};
+
 // GET single blog post with media
-export async function GET(
-  _: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function GET(req: NextRequest, context: RouteContext) {
+  const { id } = context.params;
   const supabase = await createSupabaseServerClient();
 
   const { data: user } = await supabase.auth.getUser();
@@ -39,12 +40,9 @@ export async function GET(
   return NextResponse.json(customResponse({ data: { ...data, hasViewed } }));
 }
 
-// PUT to update blog and its media
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+// PUT
+export async function PUT(req: NextRequest, context: RouteContext) {
+  const { id } = context.params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -100,17 +98,12 @@ export async function PUT(
     }
   }
 
-  // (Optional: Update blog media here if needed)
-
   return NextResponse.json({ message: "Blog updated successfully" });
 }
 
-// DELETE blog
-export async function DELETE(
-  _: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+// DELETE
+export async function DELETE(_: NextRequest, context: RouteContext) {
+  const { id } = context.params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
