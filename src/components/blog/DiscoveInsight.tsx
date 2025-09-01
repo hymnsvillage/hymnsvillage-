@@ -66,10 +66,7 @@ export default function DiscoverInsights() {
         const result = await res.json();
 
         if (result.success && result.data.blogs.length > 0) {
-          // First slice for insights (skip first 3 for hero)
           setArticles(result.data.blogs.slice(3, 8));
-
-          // Sidebar recent posts
           setRecent(result.data.blogs.slice(0, 4));
         }
       } catch (error) {

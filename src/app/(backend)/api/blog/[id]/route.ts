@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 // GET single blog post with media
 export async function GET(
   _: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
+  const { id } = params;
   const supabase = await createSupabaseServerClient();
 
   const { data: user } = await supabase.auth.getUser();
@@ -32,8 +32,9 @@ export async function GET(
 
   const hasViewed = !!impressions;
 
-  if (error)
+  if (error) {
     return NextResponse.json({ error: error.message }, { status: 404 });
+  }
 
   return NextResponse.json(customResponse({ data: { ...data, hasViewed } }));
 }
@@ -41,16 +42,17 @@ export async function GET(
 // PUT to update blog and its media
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-    const { id } = await params;
+  const { id } = params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user)
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data: existing } = await supabase
     .from("blogs")
@@ -61,8 +63,9 @@ export async function PUT(
   const isOwner = user.id === existing?.author_id;
   const isAdmin = user.user_metadata?.role === "admin";
 
-  if (!isOwner && !isAdmin)
+  if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const body = await req.json();
   const parsed = blogUpdateSchema.safeParse(body);
@@ -82,10 +85,11 @@ export async function PUT(
     .update({ title, content, category_id: categoryId })
     .eq("id", id);
 
-  if (updateError)
+  if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
 
-  // 2. Update blog tags (optional: you could diff instead)
+  // 2. Update blog tags
   await supabase.from("blog_tags").delete().eq("blog_id", id);
   if (tags) {
     for (const tagId of tags) {
@@ -96,14 +100,7 @@ export async function PUT(
     }
   }
 
-  // // 3. Update blog media
-  // await supabase.from("blog_media").delete().eq("blog_id", id);
-  // for (const url of mediaUrls) {
-  //   await supabase.from("blog_media").insert({
-  //     blog_id: id,
-  //     url,
-  //   });
-  // }
+  // (Optional: Update blog media here if needed)
 
   return NextResponse.json({ message: "Blog updated successfully" });
 }
@@ -111,16 +108,17 @@ export async function PUT(
 // DELETE blog
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
+  const { id } = params;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user)
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data: blog } = await supabase
     .from("blogs")
@@ -131,12 +129,15 @@ export async function DELETE(
   const isOwner = user.id === blog?.author_id;
   const isAdmin = user.user_metadata?.role === "admin";
 
-  if (!isOwner && !isAdmin)
+  if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const { error } = await supabase.from("blogs").delete().eq("id", id);
-  if (error)
+
+  if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ message: "Blog deleted" });
 }
