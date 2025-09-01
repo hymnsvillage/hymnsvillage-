@@ -1,6 +1,5 @@
-import { client } from "@/lib";
+// src/app/(overview)/blog/[id]/page.tsx
 import Image from "next/image";
-import Link from "next/link";
 
 interface Blog {
   id: string;
@@ -8,134 +7,102 @@ interface Blog {
   content: string;
   created_at: string;
   blog_media: { url: string }[];
-  blog_categories: { name: string };
+  categories: { name: string }[];
+  tags: { name: string }[];
 }
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+async function getBlog(id: string): Promise<Blog> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blog/${id}`, {
+  cache: "no-store",
+});
 
-  // ✅ Axios GET request
-  const res = await client.get(`/blog/${id}`);
-  console.log("Blog API response:", res.data);
 
-  // ✅ Handle customResponse wrapper or direct data
-  const post: Blog = res.data.data || res.data;
+  if (!res.ok) {
+    throw new Error("Failed to fetch blog");
+  }
 
-  // ✅ Fetch recent posts (using fetch, since it's from another endpoint)
-  const recentRes = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/blog/recent`,
-    { cache: "no-store" }
-  );
-  const recentJson = await recentRes.json();
-  const recentPosts: Blog[] = recentJson?.data || [];
+  const { data } = await res.json();
+  return data;
+}
+
+async function getRecentBlogs(): Promise<Blog[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blog/recent`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch recent blogs");
+  }
+
+  const { data } = await res.json();
+  return data;
+}
+
+export default async function BlogPostPage({ params }: { params: { id: string } }) {
+  // ✅ Run both in parallel
+  const [blog, recentPosts] = await Promise.all([
+    getBlog(params.id),
+    getRecentBlogs(),
+  ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-3 gap-10">
-      {/* LEFT: Blog content */}
-      <article className="lg:col-span-2">
-        {/* Category */}
-        <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm">
-          {post.blog_categories?.name}
-        </span>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Blog Title */}
+      <h1 className="text-3xl font-bold mb-4">{blog.title}</h1>
 
-        {/* Title */}
-        <h1 className="mt-4 text-4xl font-bold">{post.title}</h1>
+      {/* Meta */}
+      <p className="text-gray-500 text-sm mb-6">
+        {new Date(blog.created_at).toLocaleDateString()} ·{" "}
+        {blog.categories.map((c) => c.name).join(", ")}
+      </p>
 
-        {/* Meta info */}
-        <div className="flex items-center gap-4 mt-3 text-gray-500 text-sm">
-          <span>
-            Published • {new Date(post.created_at).toLocaleDateString()}
-          </span>
-        </div>
-
-        {/* Featured Image */}
-        {post.blog_media?.length > 0 && (
-          <div className="my-6">
+      {/* Featured Images */}
+      {blog.blog_media?.length > 0 && (
+        <div className="mb-6">
+          {blog.blog_media.map((media, idx) => (
             <Image
-              src={post.blog_media[0].url}
-              alt={post.title}
+              key={idx}
+              src={media.url}
+              alt={blog.title}
               width={800}
               height={400}
-              className="rounded-lg object-cover"
+              className="rounded-lg w-full object-cover mb-4"
             />
-          </div>
-        )}
-
-        {/* Blog body */}
-        <div
-          className="mt-8 prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-      </article>
-
-      {/* RIGHT: Sidebar */}
-      <aside className="space-y-8">
-        {/* Author Card – placeholder */}
-        <div className="bg-gray-50 p-6 rounded-xl text-center">
-          <Image
-            src={post.blog_media?.[0]?.url || "/placeholder.jpg"}
-            alt={post.title}
-            width={80}
-            height={80}
-            className="rounded-full mx-auto"
-          />
-          <h3 className="mt-4 font-semibold">Author Name</h3>
-          <p className="text-sm text-gray-500">Author bio goes here</p>
+          ))}
         </div>
+      )}
 
-        {/* Recent Posts */}
-        <div>
-          <h3 className="font-bold mb-4">Recent posts</h3>
-          <ul className="space-y-4">
-            {recentPosts.map((r) => (
-              <li key={r.id} className="flex items-center gap-4">
-                <Image
-                  src={r.blog_media?.[0]?.url || "/placeholder.jpg"}
-                  alt={r.title}
-                  width={70}
-                  height={50}
-                  className="rounded-lg object-cover"
-                />
-                <Link
-                  href={`/blog/${r.id}`}
-                  className="text-sm font-medium hover:underline"
-                >
-                  {r.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Blog Content */}
+      <div
+        className="prose prose-lg"
+        dangerouslySetInnerHTML={{ __html: blog.content }}
+      />
 
-        {/* Socials */}
-        <div>
-          <h3 className="font-bold mb-4">Our socials</h3>
-          <div className="flex gap-3">
-            <Link
-              href="https://facebook.com"
-              className="text-gray-500 hover:text-gray-900"
+      {/* Tags */}
+      {blog.tags?.length > 0 && (
+        <div className="mt-8 flex flex-wrap gap-2">
+          {blog.tags.map((tag, idx) => (
+            <span
+              key={idx}
+              className="bg-gray-200 text-gray-700 text-sm px-3 py-1 rounded-full"
             >
-              FB
-            </Link>
-            <Link
-              href="https://twitter.com"
-              className="text-gray-500 hover:text-gray-900"
-            >
-              TW
-            </Link>
-            <Link
-              href="https://instagram.com"
-              className="text-gray-500 hover:text-gray-900"
-            >
-              IG
-            </Link>
-          </div>
+              #{tag.name}
+            </span>
+          ))}
         </div>
-      </aside>
+      )}
+
+      {/* Recent Posts Section */}
+      <div className="mt-12">
+        <h2 className="text-xl font-semibold mb-4">Recent Posts</h2>
+        <ul className="space-y-3">
+          {recentPosts.map((post) => (
+            <li key={post.id} className="border-b pb-2">
+              {post.title}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
