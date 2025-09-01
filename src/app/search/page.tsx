@@ -1,10 +1,10 @@
 // app/search/page.tsx
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type Article = {
   id: string;
@@ -44,7 +44,8 @@ export default function SearchResultsPage() {
   return (
     <section className="p-6">
       <h1 className="text-2xl font-semibold mb-4">
-        Search Results for: <span className="text-black italic">&quot;{query}&quot;</span>
+        Search Results for:{" "}
+        <span className="text-black italic">&quot;{query}&quot;</span>
       </h1>
 
       {loading && <p className="text-gray-500">Loading...</p>}
@@ -55,7 +56,7 @@ export default function SearchResultsPage() {
 
       <div className="grid md:grid-cols-3 gap-6">
         {results.map((article) => (
-          <Link href={`/article/${article.slug}`} key={article.id}>
+          <Link href={`/blog/${article.slug}`} key={article.id}>
             <div className="rounded-xl overflow-hidden shadow-md hover:shadow-lg transition bg-white">
               <div className="relative w-full h-48">
                 <Image

@@ -81,7 +81,7 @@ export default function HeroBannerSlider() {
           
           return (
             <SwiperSlide key={slide.id}>
-              <Link href={`/article/${slide.id}`}>
+              <Link href={`/blog/${slide.id}`}>
                 <div className="relative w-full h-[500px] cursor-pointer">
                   <Image
                     src={imageUrl}
