@@ -25,14 +25,12 @@ export async function GET() {
     // supabase.from("visitors").select("id", { count: "exact", head: true }),
   ]);
 
-  return NextResponse.json(
-    customResponse({
-      data: {
-        blogCount: blogs.count || 0,
-        hymnCount: hymns.count || 0,
-        userCount: users.data?.users?.length || 0,
-        // visitorCount: visitors.count || 0,
-      },
-    })
-  );
+  return customResponse({
+  data: {
+    blogCount: blogs.count || 0,
+    hymnCount: hymns.count || 0,
+    userCount: users.data?.users?.length || 0,
+  },
+});
+
 }

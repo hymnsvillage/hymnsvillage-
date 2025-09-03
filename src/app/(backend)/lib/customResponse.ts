@@ -1,13 +1,19 @@
-// src/app/(backend)/lib/customResponse.ts
+// lib/customResponse.ts
 import { NextResponse } from "next/server";
 
-export function customResponse(
-  success: boolean = true,
-  message: string = "Success",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any = null,
-  statusCode: number = 200
-) {
+interface ResponseOptions<T = unknown> {
+  success?: boolean;
+  message?: string;
+  data?: T | null;
+  statusCode?: number;
+}
+
+export function customResponse<T = unknown>({
+  success = true,
+  message = "Success",
+  data = null,
+  statusCode = 200,
+}: ResponseOptions<T | null>) {
   return NextResponse.json(
     {
       success,
