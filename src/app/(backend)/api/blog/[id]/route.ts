@@ -1,26 +1,33 @@
+// src/app/(backend)/api/blog/[id]/route.ts
 import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
+import { blogUpdateSchema } from "@/app/(backend)/schemas/blogSchemas";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * @route GET /api/blog/:id
- * @description Get a single blog post with media, categories, tags
- * @access Public
- */
+interface Blog {
+  id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  category_id: string;
+  created_at: string;
+}
+
+//
+// GET a single blog post with media, tags, impressions
+//
 export async function GET(
   _: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params; // ✅ must await
-  const supabase = await createSupabaseServerClient();
+  const { id } = await context.params; // ✅ FIXED
 
+  const supabase = await createSupabaseServerClient();
   const { data: user } = await supabase.auth.getUser();
 
-  const [{ data, error }, { data: impressions }] = await Promise.all([
-    supabase
-      .from("blogs")
-      .select("*, categories(*), tags(*), blog_media(*)")
-      .eq("id", id)
-      .single(),
+  const [blogRes, mediaRes, tagsRes, impressionsRes] = await Promise.all([
+    supabase.from("blogs").select("*").eq("id", id).single<Blog>(),
+    supabase.from("blog_media").select("*").eq("blog_id", id),
+    supabase.from("blog_tags").select("*").eq("blog_id", id),
     supabase
       .from("impressions")
       .select("id")
@@ -30,60 +37,142 @@ export async function GET(
       .maybeSingle(),
   ]);
 
-  const hasViewed = !!impressions;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+  if (blogRes.error) {
+    return NextResponse.json(
+      customResponse(false, blogRes.error.message, null),
+      { status: 404 }
+    );
   }
 
-  return NextResponse.json(customResponse({ data: { ...data, hasViewed } }));
+  const hasViewed = !!impressionsRes.data;
+
+  return NextResponse.json(
+    customResponse(true, "Success", {
+      ...blogRes.data,
+      media: mediaRes.data || [],
+      tags: tagsRes.data || [],
+      hasViewed,
+    })
+  );
 }
 
-/**
- * @route PUT /api/blog/:id
- * @description Update a blog post
- * @access Private (requires auth)
- */
+//
+// PUT update blog + tags + media
+//
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params; // ✅ must await
+  const { id } = await context.params; // ✅ FIXED
+
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const body = await req.json();
-
-  const { data, error } = await supabase
-    .from("blogs")
-    .update(body)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json(customResponse({ data }));
+  const { data: existing } = await supabase
+    .from("blogs")
+    .select("author_id")
+    .eq("id", id)
+    .single<Blog>();
+
+  const isOwner = user.id === existing?.author_id;
+  const isAdmin = user.user_metadata?.role === "admin";
+
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const parsed = blogUpdateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const { title, content, categoryId, tags, mediaUrls } = parsed.data as {
+    title: string;
+    content: string;
+    categoryId: string;
+    tags?: string[];
+    mediaUrls?: string[];
+  };
+
+  // 1. Update blog
+  const { error: updateError } = await supabase
+    .from("blogs")
+    .update({ title, content, category_id: categoryId })
+    .eq("id", id);
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // 2. Replace tags
+  await supabase.from("blog_tags").delete().eq("blog_id", id);
+  if (tags && tags.length > 0) {
+    const tagInserts = tags.map((tagId: string) => ({
+      blog_id: id,
+      tag_id: tagId,
+    }));
+    await supabase.from("blog_tags").insert(tagInserts);
+  }
+
+  // 3. Replace media
+  await supabase.from("blog_media").delete().eq("blog_id", id);
+  if (mediaUrls && mediaUrls.length > 0) {
+    const mediaInserts = mediaUrls.map((url: string) => ({
+      blog_id: id,
+      url,
+    }));
+    await supabase.from("blog_media").insert(mediaInserts);
+  }
+
+  return NextResponse.json({ message: "Blog updated successfully" });
 }
 
-/**
- * @route DELETE /api/blog/:id
- * @description Delete a blog post
- * @access Private (requires auth)
- */
+//
+// DELETE blog
+//
 export async function DELETE(
   _: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params; // ✅ must await
+  const { id } = await context.params; // ✅ FIXED
+
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("blogs").delete().eq("id", id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json(customResponse({ message: "Blog deleted" }));
+  const { data: blog } = await supabase
+    .from("blogs")
+    .select("author_id")
+    .eq("id", id)
+    .single<Blog>();
+
+  const isOwner = user.id === blog?.author_id;
+  const isAdmin = user.user_metadata?.role === "admin";
+
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { error } = await supabase.from("blogs").delete().eq("id", id);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ message: "Blog deleted" });
 }

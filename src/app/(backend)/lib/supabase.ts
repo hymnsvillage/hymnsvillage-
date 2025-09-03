@@ -1,7 +1,31 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-export const createSupabaseServerClient = async () => {
-  const cookieStore = cookies();
-  return createRouteHandlerClient({ cookies: () => cookieStore });
-};
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies(); // ✅ must await in Next.js 15+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // ignore in server-only contexts
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {
+            // ignore in server-only contexts
+          }
+        },
+      },
+    }
+  );
+}

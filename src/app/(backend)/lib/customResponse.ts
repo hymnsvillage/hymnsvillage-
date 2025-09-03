@@ -1,18 +1,19 @@
-export const customResponse = ({
-  message,
-  statusCode = 200,
-  data,
-}: {
-  message?: string;
-  statusCode?: number;
-  data?: Record<string, unknown>;
-}) => {
-  const isSuccess = statusCode >= 200 && statusCode < 300;
-  return {
-    ...(isSuccess ? { message } : { error: message }),
-    statusCode,
-    success: isSuccess,
-    status: isSuccess ? "success" : "failed",
-    data,
-  };
-};
+// src/app/(backend)/lib/customResponse.ts
+import { NextResponse } from "next/server";
+
+export function customResponse(
+  success: boolean = true,
+  message: string = "Success",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any = null,
+  statusCode: number = 200
+) {
+  return NextResponse.json(
+    {
+      success,
+      message,
+      data,
+    },
+    { status: statusCode }
+  );
+}
