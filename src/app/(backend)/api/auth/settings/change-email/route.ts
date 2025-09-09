@@ -1,6 +1,6 @@
 import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
 import { changeEmailSchema } from "@/app/(backend)/schemas/settingsSchemas";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 /**
  * @route POST /api/auth/settings/change-email
@@ -12,17 +12,24 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return customResponse({
+      success: false,
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+  }
 
   const body = await req.json();
   const parsed = changeEmailSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 }
-    );
+    return customResponse({
+      success: false,
+      message: "Validation error",
+      data: parsed.error.flatten(),
+      statusCode: 400,
+    });
   }
 
   const { newEmail } = parsed.data;
@@ -31,10 +38,16 @@ export async function POST(req: NextRequest) {
     email: newEmail,
   });
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return customResponse({
+      success: false,
+      message: error.message,
+      statusCode: 500,
+    });
+  }
 
-  return NextResponse.json(
-    customResponse({ message: "Email change requested" })
-  );
+  return customResponse({
+    message: "Email change requested",
+    statusCode: 200,
+  });
 }

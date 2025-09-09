@@ -35,11 +35,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   }
 
-  return NextResponse.json(
-    customResponse({
-      data: { ...cleanUser(data.user as RawUser) },
-      statusCode: 200,
-      message: "Login was successful",
-    })
-  );
+  return customResponse({
+  data: { ...cleanUser(data.user as RawUser) },
+  statusCode: 200,
+  message: "Login was successful",
+});
+
 }

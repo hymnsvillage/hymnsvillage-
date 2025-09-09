@@ -3,7 +3,6 @@ import {
   customResponse,
 } from "@/app/(backend)/lib";
 import { endOfWeek, formatISO, startOfWeek } from "date-fns";
-import { NextResponse } from "next/server";
 
 /**
  * @route GET /api/user/dashboard/analytics
@@ -14,8 +13,14 @@ export async function GET() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!user) {
+    return customResponse({
+      success: false,
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+  }
 
   const start = startOfWeek(new Date(), { weekStartsOn: 1 });
   const end = endOfWeek(new Date(), { weekStartsOn: 1 });
@@ -23,13 +28,17 @@ export async function GET() {
   const { data, error } = await supabase
     .from("impressions")
     .select("id, created_at")
-    // .eq("target_type", "blog")
     .eq("viewer_id", user.id)
     .gte("created_at", formatISO(start))
     .lte("created_at", formatISO(end));
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return customResponse({
+      success: false,
+      message: error.message,
+      statusCode: 500,
+    });
+  }
 
   // Group by day (client can also handle)
   const dailyCounts: Record<string, number> = {};
@@ -38,5 +47,9 @@ export async function GET() {
     dailyCounts[date] = (dailyCounts[date] || 0) + 1;
   }
 
-  return NextResponse.json(customResponse({ data: { dailyCounts } }));
+  return customResponse({
+    data: { dailyCounts },
+    message: "Weekly analytics fetched successfully",
+    statusCode: 200,
+  });
 }

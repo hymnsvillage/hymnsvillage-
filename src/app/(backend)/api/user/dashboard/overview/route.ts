@@ -2,7 +2,6 @@ import {
   createSupabaseServerClient,
   customResponse,
 } from "@/app/(backend)/lib";
-import { NextResponse } from "next/server";
 
 /**
  * @route GET /api/user/dashboard/overview
@@ -14,8 +13,14 @@ export async function GET() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!user) {
+    return customResponse({
+      success: false,
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+  }
 
   const userId = user.id;
 
@@ -39,14 +44,14 @@ export async function GET() {
         .eq("author_id", userId),
     ]);
 
-  return NextResponse.json(
-    customResponse({
-      data: {
-        posts: postCount.count ?? 0,
-        followers: followerCount.count ?? 0,
-        likes: likeCount.count ?? 0,
-        impressions: impressionCount.count ?? 0,
-      },
-    })
-  );
+  return customResponse({
+    data: {
+      posts: postCount.count ?? 0,
+      followers: followerCount.count ?? 0,
+      likes: likeCount.count ?? 0,
+      impressions: impressionCount.count ?? 0,
+    },
+    message: "User dashboard overview fetched successfully",
+    statusCode: 200,
+  });
 }

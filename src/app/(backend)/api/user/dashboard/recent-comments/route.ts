@@ -2,7 +2,6 @@ import {
   createSupabaseServerClient,
   customResponse,
 } from "@/app/(backend)/lib";
-import { NextResponse } from "next/server";
 
 /**
  * @route GET /api/user/dashboard/recent-comments
@@ -13,8 +12,14 @@ export async function GET() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!user) {
+    return customResponse({
+      success: false,
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+  }
 
   const { data: comments, error } = await supabase
     .from("blog_comments")
@@ -23,8 +28,17 @@ export async function GET() {
     .eq("user_id", user.id)
     .limit(5);
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return customResponse({
+      success: false,
+      message: error.message,
+      statusCode: 500,
+    });
+  }
 
-  return NextResponse.json(customResponse({ data: { comments } }));
+  return customResponse({
+    data: { comments },
+    message: "Recent comments fetched successfully",
+    statusCode: 200,
+  });
 }

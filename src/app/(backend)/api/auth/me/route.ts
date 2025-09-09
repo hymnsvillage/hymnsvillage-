@@ -142,10 +142,9 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  return NextResponse.json(
-    customResponse({
-      message: "Profile updated successfully",
-      data: { avatarUrl },
-    })
-  );
+ return customResponse({
+    message: "Profile updated successfully",
+    data: { avatarUrl },
+    statusCode: 200,
+  });
 }

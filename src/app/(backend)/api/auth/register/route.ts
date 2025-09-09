@@ -11,20 +11,23 @@ import {
   registerSchema,
 } from "@/app/(backend)/lib";
 import { appUrl } from "@/supabase";
-import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
   const parsed = registerSchema.safeParse(body);
+
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 }
-    );
+    return customResponse({
+      success: false,
+      message: "Validation error",
+      data: parsed.error.flatten(),
+      statusCode: 400,
+    });
   }
 
   const { email, password, name, username, role: userRole } = parsed.data;
   const supabase = await createSupabaseServerClient();
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -34,12 +37,17 @@ export async function POST(req: Request) {
     },
   });
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(
-    customResponse({
-      message:
-        "User registered successfully, Please check your mail to activate your account.",
-    })
-  );
+  if (error) {
+    return customResponse({
+      success: false,
+      message: error.message,
+      statusCode: 400,
+    });
+  }
+
+  return customResponse({
+    message:
+      "User registered successfully. Please check your mail to activate your account.",
+    statusCode: 200,
+  });
 }

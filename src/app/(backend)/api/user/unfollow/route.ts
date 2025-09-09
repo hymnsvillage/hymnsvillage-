@@ -1,5 +1,5 @@
-import { createSupabaseServerClient } from "@/app/(backend)/lib";
-import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServerClient, customResponse } from "@/app/(backend)/lib";
+import { NextRequest } from "next/server";
 
 /**
  * @route DELETE /api/user/unfollow
@@ -11,12 +11,23 @@ export async function DELETE(req: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!user) {
+    return customResponse({
+      success: false,
+      message: "Unauthorized",
+      statusCode: 401,
+    });
+  }
 
   const { followed_id } = await req.json();
-  if (!followed_id)
-    return NextResponse.json({ error: "Missing target user" }, { status: 400 });
+  if (!followed_id) {
+    return customResponse({
+      success: false,
+      message: "Missing target user",
+      statusCode: 400,
+    });
+  }
 
   const { error } = await supabase
     .from("followers")
@@ -24,8 +35,16 @@ export async function DELETE(req: NextRequest) {
     .eq("follower_id", user.id)
     .eq("followed_id", followed_id);
 
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return customResponse({
+      success: false,
+      message: error.message,
+      statusCode: 500,
+    });
+  }
 
-  return NextResponse.json({ message: "User unfollowed successfully" });
+  return customResponse({
+    message: "User unfollowed successfully",
+    statusCode: 200,
+  });
 }

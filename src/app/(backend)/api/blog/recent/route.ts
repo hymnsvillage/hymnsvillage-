@@ -50,9 +50,8 @@ export async function GET() {
       ?.map((tag) => tag.name),
   }));
 
-  return NextResponse.json(
-    customResponse({
-      data: { blogs },
-    })
-  );
+  return customResponse({
+  data: { blogs },
+});
+
 }
