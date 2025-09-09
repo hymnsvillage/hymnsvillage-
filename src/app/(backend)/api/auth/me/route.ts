@@ -1,5 +1,4 @@
 import { createSupabaseServerClient } from "@/app/(backend)/lib";
-import { cleanUser, RawUser } from "@/app/(backend)/lib/cleanUser";
 import { customResponse } from "@/app/(backend)/lib/customResponse";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
@@ -12,6 +11,7 @@ const ALLOWED_MIME_TYPES = [
   "image/webp",
 ];
 
+// Detect MIME type from raw buffer
 function getMimeType(buffer: Buffer): string | null {
   if (
     buffer
@@ -29,6 +29,10 @@ function getMimeType(buffer: Buffer): string | null {
   return null;
 }
 
+/**
+ * @route GET /api/auth/me
+ * @description Get logged-in user profile
+ */
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
@@ -50,13 +54,23 @@ export async function GET() {
       .eq("follower_id", user.id),
   ]);
 
-  return NextResponse.json(
-    customResponse({
-      data: { ...cleanUser(user as RawUser), followers, following },
-    })
-  );
+  return customResponse({
+    data: {
+      id: user.id,
+      name: user.user_metadata?.name || user.email?.split("@")[0] || "Anonymous",
+      avatar_url:
+        user.user_metadata?.avatar_url ||
+        "https://ui-avatars.com/api/?name=User&background=random",
+      followers: followers?.count || 0,
+      following: following?.count || 0,
+    },
+  });
 }
 
+/**
+ * @route PUT /api/auth/me
+ * @description Update logged-in user profile
+ */
 export async function PUT(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const {
@@ -72,11 +86,12 @@ export async function PUT(req: NextRequest) {
   const userRole = formData.get("userRole")?.toString();
   const avatarFile = formData.get("avatar") as File | null;
 
-  let avatarUrl: string | undefined;
+  let avatar_url: string | undefined;
 
   if (avatarFile && typeof avatarFile.arrayBuffer === "function") {
     const buffer = Buffer.from(await avatarFile.arrayBuffer());
     const sizeMB = buffer.length / (1024 * 1024);
+
     if (sizeMB > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: "Avatar file must be less than 3MB" },
@@ -89,7 +104,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Invalid avatar file type. Only PNG, JPEG, and WEBP are allowed.",
+            "Invalid avatar file type. Only PNG, JPEG, JPG, and WEBP are allowed.",
         },
         { status: 400 }
       );
@@ -98,7 +113,8 @@ export async function PUT(req: NextRequest) {
     const ext = mimeType.split("/")[1];
     const path = `${user.id}/${uuidv4()}.${ext}`;
 
-    const existingAvatarUrl = user.user_metadata?.avatarUrl;
+    // Delete old avatar if it's in our Supabase bucket
+    const existingAvatarUrl = user.user_metadata?.avatar_url;
     if (
       existingAvatarUrl?.includes(
         "supabase.co/storage/v1/object/public/avatars"
@@ -111,6 +127,7 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Upload new avatar
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(path, buffer, {
@@ -126,13 +143,13 @@ export async function PUT(req: NextRequest) {
       .from("avatars")
       .getPublicUrl(path);
 
-    avatarUrl = publicUrl.publicUrl;
+    avatar_url = publicUrl.publicUrl;
   }
 
   const updateData: Record<string, unknown> = {};
   if (name) updateData.name = name;
   if (userRole) updateData.userRole = userRole;
-  if (avatarUrl) updateData.avatarUrl = avatarUrl;
+  if (avatar_url) updateData.avatar_url = avatar_url;
 
   const { error: updateError } = await supabase.auth.updateUser({
     data: updateData,
@@ -142,9 +159,14 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
- return customResponse({
+  return customResponse({
     message: "Profile updated successfully",
-    data: { avatarUrl },
+    data: {
+      id: user.id,
+      name: name || user.user_metadata?.name,
+      avatar_url: avatar_url || user.user_metadata?.avatar_url,
+      userRole: userRole || user.user_metadata?.userRole,
+    },
     statusCode: 200,
   });
 }
