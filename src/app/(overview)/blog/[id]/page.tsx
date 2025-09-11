@@ -17,11 +17,11 @@ interface Blog {
 }
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   // Fetch single blog
