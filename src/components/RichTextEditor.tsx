@@ -82,9 +82,10 @@ const RichTextEditor = () => {
          axios.get('/api/blog/tag'),
       ]);
 
-      setCategories(Array.isArray(catRes.data?.data?.categories) ? catRes.data.data.categories : []);
+           setCategories(Array.isArray(catRes.data) ? catRes.data : []);
 
-      setTags(Array.isArray(tagRes.data?.data?.tags) ? tagRes.data.data.tags : []);
+           setTags(Array.isArray(tagRes.data) ? tagRes.data : []);
+
 
     } catch (error) {
       console.error('Error fetching categories/tags', error);
@@ -247,14 +248,14 @@ const RichTextEditor = () => {
             </div>
           )}
 
-         <CreatableSelect
-               isClearable
-                onChange={setCategory}
-               onCreateOption={handleCreateCategory}
-                options={(categories || []).map(c => ({ value: c.id, label: c.name }))}
-                value={category}
+            <CreatableSelect
+              isClearable
+              onChange={setCategory}
+              onCreateOption={handleCreateCategory}
+              options={categories.map(c => ({ value: c.id, label: c.name }))} // UUID in value
+               value={category}
               placeholder="Select or create category"
-            />
+           />
 
             <CreatableSelect
                 isMulti
