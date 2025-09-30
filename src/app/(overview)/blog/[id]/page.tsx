@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import SocialLinks from "@/components/SocialLinks";
 
 interface Blog {
   id: string;
@@ -38,24 +39,25 @@ export default async function BlogPostPage({ params }: PageProps) {
   const blogsArray = Array.isArray(allBlogsRes?.data?.blogs)
     ? allBlogsRes.data.blogs
     : [];
-  const recentPosts = blogsArray.filter((b: { id: string; }) => b.id !== id).slice(0, 4);
+  const recentPosts = blogsArray.filter((b: { id: string }) => b.id !== id).slice(0, 4);
+  const featuredImageUrl = blog.media?.[0]?.url || "/Rectangle 1 (1).png";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-      {/* Main Content */}
-      <article className="lg:col-span-2">
+    <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+      {/* ----------- MAIN ARTICLE ----------- */}
+      <article className="lg:col-span-2 space-y-8">
         {/* Tag */}
         {blog.tags?.[0] && (
-          <span className="inline-block px-3 py-1 mb-4 text-sm font-medium text-purple-700 bg-purple-100 rounded-full">
+          <span className="inline-block px-3 py-1 text-sm font-medium text-purple-700 bg-purple-100 rounded-full">
             {blog.tags[0].name || "Inspiration"}
           </span>
         )}
 
         {/* Title */}
-        <h1 className="text-4xl font-bold mb-4 leading-snug">{blog.title}</h1>
+        <h1 className="text-4xl font-bold leading-snug">{blog.title}</h1>
 
-        {/* Author meta */}
-        <div className="flex items-center gap-4 mb-8">
+        {/* Author Meta */}
+        <div className="flex items-center gap-4">
           <Image
             src={blog.author?.avatar || "/placeholder.png"}
             alt={blog.author?.name || "Author"}
@@ -63,8 +65,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             height={48}
             className="rounded-full"
           />
-          <div className="flex flex-col">
-            <span className="font-medium">{blog.author?.name || "Author's Name"}</span>
+          <div>
+            <p className="font-medium">{blog.author?.name || "Author's Name"}</p>
             <div className="text-sm text-gray-500 flex items-center gap-2">
               <span>{new Date(blog.created_at).toDateString()}</span>
               <span>•</span>
@@ -85,17 +87,15 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
 
         {/* Featured Image */}
-        {blog.media?.[0]?.url && (
-          <div className="mb-10">
-            <Image
-              src={blog.media[0].url}
-              alt={blog.title}
-              width={1200}
-              height={600}
-              className="rounded-2xl w-full object-cover"
-            />
-          </div>
-        )}
+        <div className="mt-4">
+          <Image
+            src={featuredImageUrl}
+            alt={blog.title}
+            width={1200}
+            height={600}
+            className="w-full rounded-2xl object-cover"
+          />
+        </div>
 
         {/* Content */}
         <div
@@ -104,8 +104,8 @@ export default async function BlogPostPage({ params }: PageProps) {
         />
       </article>
 
-      {/* Sidebar */}
-      <aside className="space-y-10">
+      {/* ----------- SIDEBAR ----------- */}
+      <aside className="space-y-12">
         {/* Author Card */}
         <div className="p-6 bg-gray-50 rounded-2xl text-center">
           <Image
@@ -120,43 +120,42 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
 
         {/* Recent Posts */}
-        <div>
-          <h3 className="font-semibold mb-4 text-lg">Recent post</h3>
-          <ul className="space-y-4">
-            {recentPosts.map((post: Blog) => (
-              <li key={post.id} className="flex gap-3">
-                <Image
-                  src={post.media?.[0]?.url || "/placeholder.png"}
-                  alt={post.title}
-                  width={80}
-                  height={60}
-                  className="rounded-lg object-cover"
-                />
-                <div>
-                  <Link
-                    href={`/blog/${post.id}`}
-                    className="text-sm font-medium hover:underline"
-                  >
-                    {post.title}
-                  </Link>
+        <div className="space-y-4">
+          {recentPosts.map((article: Blog) => {
+            const imageUrl = article.media?.[0]?.url || "/Rectangle 1 (1).png";
+
+            return (
+              <Link
+                key={article.id}
+                href={`/blog/${article.id}`}
+                className="flex items-start gap-4 pb-4 border-b border-gray-200"
+              >
+                <div className="w-16 h-16 relative rounded-md overflow-hidden bg-gray-100">
+                  <Image
+                    src={imageUrl}
+                    alt={article.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full inline-block mb-1">
+                    {article.tags?.[0]?.name || "General"}
+                  </span>
+                  <h4 className="text-sm font-semibold text-black">{article.title}</h4>
                   <p className="text-xs text-gray-500">
-                    {new Date(post.created_at).toDateString()}
+                    {article.author?.name || "Author"} •{" "}
+                    {new Date(article.created_at).toLocaleDateString()}
                   </p>
                 </div>
-              </li>
-            ))}
-          </ul>
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Socials */}
-        <div>
-          <h3 className="font-semibold mb-4 text-lg">Our socials</h3>
-          <div className="flex gap-4 text-xl text-gray-600">
-            <Link href="#"><i className="ri-facebook-circle-line"></i></Link>
-            <Link href="#"><i className="ri-instagram-line"></i></Link>
-            <Link href="#"><i className="ri-youtube-line"></i></Link>
-            <Link href="#"><i className="ri-twitter-x-line"></i></Link>
-          </div>
+        {/* Social Links */}
+        <div className="pt-6">
+          <SocialLinks />
         </div>
       </aside>
     </div>
