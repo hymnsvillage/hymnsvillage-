@@ -28,7 +28,7 @@ export default function BlogPage() {
         setCategories(catData);
 
         // ✅ Fetch blogs for the logged-in user
-        const blogRes = await fetch("/api/blogs"); // adjust to your endpoint
+        const blogRes = await fetch("/api/blog"); // adjust to your endpoint
         const blogData = await blogRes.json();
         setBlogs(blogData);
       } catch (err) {
