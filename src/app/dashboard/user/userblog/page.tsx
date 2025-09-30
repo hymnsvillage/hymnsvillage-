@@ -1,4 +1,3 @@
-// app/dashboard/blog/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,52 +6,43 @@ import Image from 'next/image';
 import { MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
 import NoblogUi from '@/components/dashboard/user_dashboard/NoblogUi';
 
+interface Blog {
+  id: number;
+  category: string;
+  title: string;
+  excerpt: string;
+  created_at: string;
+  image_url: string;
+  status: 'published' | 'draft';
+}
+
 export default function BlogPage() {
   const router = useRouter();
 
-  const [articles, setArticles] = useState<
-    { id: number; category: string; title: string; excerpt: string; author: string; timestamp: string; image: string; status: 'published' | 'draft' }[]
-  >([]);
+  const [articles, setArticles] = useState<Blog[]>([]);
   const [view, setView] = useState<'published' | 'draft'>('published');
   const [category, setCategory] = useState('All');
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      const dummyData = [
-        {
-          id: 1,
-          category: 'Lifestyle',
-          title: "Yo Reddit! What's A Small Thing That Anyone Can Do At Nearly Anything...",
-          excerpt: 'What’s a small thing that anyone can do at nearly anything to improve their...',
-          author: 'Admin',
-          timestamp: '3hrs ago',
-          image: '/images/article1.jpg',
-          status: 'published' as const,
-        },
-        {
-          id: 2,
-          category: 'Faith',
-          title: 'How To Design A Product That Can Grow Itself 10x In Year...',
-          excerpt: 'What’s a small thing that anyone can do at nearly anything to improve their...',
-          author: 'You',
-          timestamp: 'Yesterday',
-          image: '/images/article2.jpg',
-          status: 'published' as const,
-        },
-        {
-          id: 3,
-          category: 'Worship',
-          title: 'Understanding Color Theory: The Color Wheel And Finding Compl...',
-          excerpt: 'What’s a small thing that anyone can do at nearly anything to improve their...',
-          author: 'Admin',
-          timestamp: '3 days ago',
-          image: '/images/article3.jpg',
-          status: 'draft' as const,
-        },
-      ];
-      setArticles(dummyData);
-    }, 1000);
+    const fetchBlogs = async () => {
+      try {
+        const res = await fetch('/api/blogs');
+        if (!res.ok) {
+          console.error('Failed to fetch blogs');
+          return;
+        }
+        const data = await res.json();
+        setArticles(data);
+      } catch (err) {
+        console.error('Error fetching blogs:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
   }, []);
 
   const filteredArticles = articles.filter((a) => {
@@ -61,15 +51,20 @@ export default function BlogPage() {
     return matchStatus && matchCategory;
   });
 
-  const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this post?')) {
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-    }
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    // optional: call API to delete
+    setArticles((prev) => prev.filter((a) => a.id !== id));
   };
 
   const handleEdit = (id: number) => {
     router.push(`/dashboard/blog/edit/${id}`);
   };
+
+  if (loading) {
+    return <p className="p-6">Loading...</p>;
+  }
 
   if (articles.length === 0) {
     return <NoblogUi />;
@@ -134,7 +129,7 @@ export default function BlogPage() {
             {/* Image */}
             <div className="w-32 h-24 relative rounded-md overflow-hidden">
               <Image
-                src={article.image}
+                src={article.image_url || '/no-data.png'}
                 alt={article.title}
                 fill
                 className="object-cover"
@@ -149,8 +144,7 @@ export default function BlogPage() {
               <h2 className="text-sm font-semibold line-clamp-2">{article.title}</h2>
               <p className="text-xs text-gray-500 line-clamp-1">{article.excerpt}</p>
               <div className="text-xs mt-1 flex items-center gap-4 text-gray-400">
-                <span>{article.author}</span>
-                <span>{article.timestamp}</span>
+                <span>{new Date(article.created_at).toLocaleDateString()}</span>
               </div>
             </div>
 
