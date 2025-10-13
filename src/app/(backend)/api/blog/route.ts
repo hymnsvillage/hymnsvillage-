@@ -10,6 +10,15 @@ import {
 import { orderResponse } from "../../lib/orderResponse";
 import { blogInputSchema } from "../../schemas/blogSchemas";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '25mb', // or adjust to your expected max file size
+    },
+  },
+};
+
+
 export async function GET(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
 

@@ -18,27 +18,32 @@ interface Blog {
 }
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { id } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const { id } = params;
 
-  // Fetch single blog
+  // ✅ Ensure base URL works in both local & production
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+
+  // ✅ Fetch single blog post
   const res = await fetch(`${baseUrl}/api/blog/${id}`, { cache: "no-store" });
   if (!res.ok) return notFound();
+
   const blogRes = await res.json();
   const blog: Blog = blogRes.data;
-
   if (!blog) return notFound();
 
-  // Fetch recent blogs
+  // ✅ Fetch recent blogs
   const recentRes = await fetch(`${baseUrl}/api/blog/recent`, { cache: "no-store" });
   const allBlogsRes = await recentRes.json();
+
   const blogsArray = Array.isArray(allBlogsRes?.data?.blogs)
     ? allBlogsRes.data.blogs
     : [];
+
   const recentPosts = blogsArray.filter((b: { id: string }) => b.id !== id).slice(0, 4);
   const featuredImageUrl = blog.media?.[0]?.url || "/Rectangle 1 (1).png";
 
@@ -123,7 +128,6 @@ export default async function BlogPostPage({ params }: PageProps) {
         <div className="space-y-4">
           {recentPosts.map((article: Blog) => {
             const imageUrl = article.media?.[0]?.url || "/Rectangle 1 (1).png";
-
             return (
               <Link
                 key={article.id}
