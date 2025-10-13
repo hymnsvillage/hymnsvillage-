@@ -28,12 +28,11 @@ import {
   Code, Highlighter, Quote, Minus, Eraser, Eye
 } from 'lucide-react';
 
-
 type OptionType = { value: string; label: string };
 type Category = { id: string; name: string };
 type Tag = { id: string; name: string };
 
-const RichTextEditor = () => {
+const RichTextEditor: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -74,123 +73,143 @@ const RichTextEditor = () => {
     content: '',
   });
 
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [catRes, tagRes] = await Promise.all([
-        axios.get('/api/blog/category'),
-         axios.get('/api/blog/tag'),
-      ]);
+  // Fetch categories & tags (consumes customResponse: res.data.data.categories)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catRes, tagRes] = await Promise.all([
+          axios.get('/api/blog/category'),
+          axios.get('/api/blog/tag'),
+        ]);
 
-           setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+        const fetchedCategories: Category[] = Array.isArray(catRes.data?.data?.categories)
+          ? catRes.data.data.categories
+          : [];
 
-           setTags(Array.isArray(tagRes.data) ? tagRes.data : []);
+        const fetchedTags: Tag[] = Array.isArray(tagRes.data?.data?.tags)
+          ? tagRes.data.data.tags
+          : [];
 
+        setCategories(fetchedCategories);
+        setTags(fetchedTags);
+      } catch (error) {
+        console.error('Error fetching categories/tags', error);
+        setCategories([]);
+        setTags([]);
+      }
+    };
 
-    } catch (error) {
-      console.error('Error fetching categories/tags', error);
-      setCategories([]);
-      setTags([]);
-    }
-  };
-  fetchData();
-}, []);
-
+    fetchData();
+  }, []);
 
   useEffect(() => {
     setSlug(slugify(title, { lower: true, strict: true }));
     setMetaTitle(title);
   }, [title]);
 
-   
   const handleImagePreview = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    setFeaturedImage(reader.result as string);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFeaturedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
-
+  // Create category (POST -> { success,message,data })
   const handleCreateCategory = async (inputValue: string) => {
     try {
       const res = await axios.post('/api/blog/category', { name: inputValue });
-      const newCat = res.data;
+      const newCat: Category | undefined = res.data?.data;
+      if (!newCat) throw new Error('No category returned from server');
+
+      // update raw categories (for future fetches)
       setCategories(prev => [...prev, newCat]);
-      setCategory({ value: newCat.id, label: newCat.name });
+
+      // select the new option in react-select shape
+      const newOption: OptionType = { value: newCat.id, label: newCat.name };
+      setCategory(newOption);
       toast.success('Category created');
-    } catch {
+    } catch (err) {
+      console.error('create category error', err);
       toast.error('Failed to create category');
     }
   };
 
+  // Create tag
   const handleCreateTag = async (inputValue: string) => {
     try {
       const res = await axios.post('/api/blog/tag', { name: inputValue });
-      const newTag = res.data;
+      const newTag: Tag | undefined = res.data?.data;
+      if (!newTag) throw new Error('No tag returned from server');
+
       setTags(prev => [...prev, newTag]);
+
+      // add to selected tags immediately
       setSelectedTags(prev => [...prev, { value: newTag.id, label: newTag.name }]);
       toast.success('Tag created');
-    } catch {
+    } catch (err) {
+      console.error('create tag error', err);
       toast.error('Failed to create tag');
     }
   };
 
- const handleSubmit = async () => {
-  if (!title || !editor) return toast.error('Title and content are required');
+  // Submit post (consumes customResponse)
+  const handleSubmit = async () => {
+    if (!title || !editor) return toast.error('Title and content are required');
 
-  try {
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('slug', slug);
-    formData.append('content', editor.getHTML());
-    formData.append('metaTitle', metaTitle);
-    formData.append('metaDescription', metaDescription);
-    formData.append('canonicalUrl', canonicalUrl);
-    formData.append('altText', altText);
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('slug', slug);
+      formData.append('content', editor.getHTML());
+      formData.append('metaTitle', metaTitle);
+      formData.append('metaDescription', metaDescription);
+      formData.append('canonicalUrl', canonicalUrl);
+      formData.append('altText', altText);
 
-    // Only append if category exists
-    if (category?.value) {
-      formData.append('categoryId', category.value);
+      if (category?.value) {
+        formData.append('categoryId', category.value);
+      }
+
+      selectedTags.forEach((tag, index) => {
+        formData.append(`tagIds[${index}]`, tag.value);
+      });
+
+      const fileInput = fileInputRef.current;
+      const file = fileInput?.files?.[0];
+      if (file) {
+        formData.append('file', file);
+      }
+
+      const res = await axios.post('/api/blog', formData);
+
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Post created successfully');
+
+        // Reset form only when success
+        setTitle('');
+        setSlug('');
+        setMetaTitle('');
+        setMetaDescription('');
+        setCanonicalUrl('');
+        editor.commands.clearContent();
+        setCategory(null);
+        setSelectedTags([]);
+        setFeaturedImage(null);
+        setAltText('');
+        if (fileInput?.value) fileInput.value = '';
+      } else {
+        toast.error(res.data?.message || 'Failed to create post');
+      }
+    } catch (err) {
+      console.error('submit post error', err);
+      toast.error('Failed to create post');
     }
+  };
 
-    // Only append if tags are selected
-    selectedTags.forEach((tag, index) => {
-      formData.append(`tagIds[${index}]`, tag.value);
-    });
-
-    // Append image file if selected
-    const fileInput = fileInputRef.current;
-    const file = fileInput?.files?.[0];
-    if (file) {
-      formData.append('file', file);
-    }
-
-    await axios.post('/api/blog', formData);
-
-    toast.success('Post created successfully');
-
-    // Reset form
-    setTitle('');
-    setSlug('');
-    setMetaTitle('');
-    setMetaDescription('');
-    setCanonicalUrl('');
-    editor.commands.clearContent();
-    setCategory(null);
-    setSelectedTags([]);
-    setFeaturedImage(null);
-    setAltText('');
-    if (fileInput?.value) fileInput.value = '';
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to create post');
-  }
-};
-
-
+  // toolbar buttons (unchanged)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toolbarButtons: [string, () => React.JSX.Element, any?][] = [
     ['toggleBold', () => <Bold size={16} />],
@@ -210,6 +229,10 @@ const RichTextEditor = () => {
     ['setTextAlign', () => <AlignCenter size={16} />, 'center'],
     ['setTextAlign', () => <AlignRight size={16} />, 'right']
   ];
+
+  // derive options from categories / tags
+  const categoryOptions: OptionType[] = categories.map(c => ({ value: c.id, label: c.name }));
+  const tagOptions: OptionType[] = tags.map(t => ({ value: t.id, label: t.name }));
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -238,7 +261,6 @@ const RichTextEditor = () => {
           <div onClick={() => fileInputRef.current?.click()} className="border border-dashed p-4 text-center cursor-pointer bg-gray-50">
             <ImageIcon className="mx-auto mb-2" /> Click to upload
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePreview} />
-
           </div>
 
           {featuredImage && (
@@ -248,24 +270,25 @@ const RichTextEditor = () => {
             </div>
           )}
 
-            <CreatableSelect
-              isClearable
-              onChange={setCategory}
-              onCreateOption={handleCreateCategory}
-              options={categories.map(c => ({ value: c.id, label: c.name }))} // UUID in value
-               value={category}
-              placeholder="Select or create category"
-           />
+          {/* Category select (single) */}
+          <CreatableSelect<OptionType, false>
+            isClearable
+            placeholder="Select or create category"
+            options={categoryOptions}
+            value={category}
+            onChange={(opt) => setCategory(opt)}
+            onCreateOption={handleCreateCategory}
+          />
 
-            <CreatableSelect
-                isMulti
-                onChange={(newValue) => setSelectedTags(newValue as OptionType[])}
-                onCreateOption={handleCreateTag}
-                options={(tags || []).map(t => ({ value: t.id, label: t.name }))}
-                value={selectedTags}
-                placeholder="Select or create tags"
-              />
-
+          {/* Tags select (multi) */}
+          <CreatableSelect<OptionType, true>
+            isMulti
+            placeholder="Select or create tags"
+            options={tagOptions}
+            value={selectedTags}
+            onChange={(newValue) => setSelectedTags((newValue as OptionType[]) || [])}
+            onCreateOption={handleCreateTag}
+          />
         </div>
 
         <div className="md:col-span-2 space-y-4">

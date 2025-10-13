@@ -10,9 +10,15 @@ export async function GET() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("blog_categories").select("*");
 
-  if (error)
+  if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(customResponse({ data: { categories: data } }));
+  }
+
+  // ✅ return directly using customResponse (not wrapped again in NextResponse.json)
+  return customResponse({
+    data: { categories: data },
+    message: "Categories fetched successfully",
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -21,12 +27,13 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user ) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const body = await req.json();
   const parsed = categoryInputSchema.safeParse(body);
+
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -40,13 +47,12 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  if (insertError)
+  if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
 
-  return NextResponse.json(
-    customResponse({
-      data,
-      message: "Category created successfully",
-    })
-  );
+  return customResponse({
+    data,
+    message: "Category created successfully",
+  });
 }
