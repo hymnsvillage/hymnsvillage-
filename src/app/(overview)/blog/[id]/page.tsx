@@ -17,12 +17,12 @@ interface Blog {
   };
 }
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+interface PageProps {
+  params: Promise<{ id: string }>; // ✅ Must be Promise because this page is async
+}
+
+export default async function BlogPostPage({ params }: PageProps) {
+  const { id } = await params; // ✅ Correct: await params before using
 
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
