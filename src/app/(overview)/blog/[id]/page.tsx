@@ -17,18 +17,17 @@ interface Blog {
   };
 }
 
-interface PageProps {
+export default async function BlogPostPage({
+  params,
+}: {
   params: { id: string };
-}
-
-export default async function BlogPostPage({ params }: PageProps) {
+}) {
   const { id } = params;
 
-  // ✅ Ensure base URL works in both local & production
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
 
-  // ✅ Fetch single blog post
+  // ✅ Fetch single blog
   const res = await fetch(`${baseUrl}/api/blog/${id}`, { cache: "no-store" });
   if (!res.ok) return notFound();
 
