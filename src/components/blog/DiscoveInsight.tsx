@@ -22,11 +22,17 @@ interface BlogCardProps {
 
 function BlogCard({ article }: BlogCardProps) {
   const imageUrl = article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
-  const description = article.content.substring(0, 100) + "...";
   const categoryName = article.blog_categories?.name || "Technology";
 
+  // Convert HTML content to plain text and trim
+  const plainText = article.content?.replace(/<[^>]+>/g, "") || "";
+  const description =
+    plainText.length > 100
+      ? plainText.substring(0, 100) + "..."
+      : plainText;
+
   return (
-    <Link href={`/blog/${article.id}`} className="group">
+    <Link href={`/blog/${article.slug}`} className="group">
       <div className="rounded-xl overflow-hidden shadow hover:shadow-lg transition">
         <div className="relative w-full h-40">
           <Image
@@ -66,8 +72,9 @@ export default function DiscoverInsights() {
         const result = await res.json();
 
         if (result.success && result.data.blogs.length > 0) {
-          setArticles(result.data.blogs.slice(3, 8));
-          setRecent(result.data.blogs.slice(0, 4));
+          const blogs = result.data.blogs;
+          setArticles(blogs.slice(3, 8));
+          setRecent(blogs.slice(0, 4));
         }
       } catch (error) {
         console.error("Failed to fetch insight blogs:", error);
@@ -137,10 +144,13 @@ export default function DiscoverInsights() {
           {recent.map((article) => {
             const imageUrl =
               article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+            const categoryName =
+              article.blog_categories?.name || "General";
+
             return (
               <Link
                 key={article.id}
-                href={`/blog/${article.id}`}
+                href={`/blog/${article.slug}`}
                 className="flex items-start gap-5 pb-4 border-b border-gray-200"
               >
                 <div className="w-16 h-16 relative rounded-md overflow-hidden bg-gray-100">
@@ -153,7 +163,7 @@ export default function DiscoverInsights() {
                 </div>
                 <div className="flex-1">
                   <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full inline-block mb-1">
-                    {article.blog_categories?.name || "General"}
+                    {categoryName}
                   </span>
                   <h4 className="text-sm font-semibold text-black">
                     {article.title}

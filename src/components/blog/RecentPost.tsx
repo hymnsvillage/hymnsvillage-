@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -24,8 +23,9 @@ export default function RecentPosts() {
   useEffect(() => {
     async function fetchRecentPosts() {
       try {
-        const res = await fetch('/api/blog/recent');
+        const res = await fetch("/api/blog/recent");
         const result = await res.json();
+
         if (result.success && result.data.blogs.length > 0) {
           setRecentPosts(result.data.blogs);
         }
@@ -45,7 +45,10 @@ export default function RecentPosts() {
         <h2 className="text-2xl font-semibold mb-6">Recent Posts</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-80"></div>
+            <div
+              key={i}
+              className="bg-gray-200 animate-pulse rounded-xl h-80"
+            ></div>
           ))}
         </div>
       </section>
@@ -59,10 +62,16 @@ export default function RecentPosts() {
         {recentPosts.map((post) => {
           const imageUrl = post.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
           const categoryName = post.blog_categories?.name || "Technology";
-          const description = post.content.substring(0, 100) + "...";
+
+          // Remove HTML tags from content and create short description
+          const plainText = post.content.replace(/<[^>]+>/g, "");
+          const description =
+            plainText.length > 100
+              ? plainText.substring(0, 100) + "..."
+              : plainText;
 
           return (
-            <Link key={post.id} href={`/blog/${post.id}`} className="group">
+            <Link key={post.id} href={`/blog/${post.slug}`} className="group">
               <div className="rounded-xl overflow-hidden shadow hover:shadow-lg transition">
                 <div className="relative w-full h-48">
                   <Image
@@ -84,8 +93,7 @@ export default function RecentPosts() {
                   </p>
                   <p className="text-sm text-gray-500">
                     {post.author_name || "Author"} •{" "}
-                    {new Date(post.created_at).toLocaleDateString()} • 5 min
-                    read
+                    {new Date(post.created_at).toLocaleDateString()} • 5 min read
                   </p>
                 </div>
               </div>

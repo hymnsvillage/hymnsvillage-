@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -30,10 +29,10 @@ export default function RecommendedSection() {
   useEffect(() => {
     async function fetchFeaturedArticle() {
       try {
-        const res = await fetch('/api/blog/recent');
+        const res = await fetch("/api/blog/recent");
         const result = await res.json();
         if (result.success && result.data.blogs.length > 0) {
-          // Get the first blog as featured
+          // Use the first blog as featured
           setFeaturedArticle(result.data.blogs[0]);
         }
       } catch (error) {
@@ -67,8 +66,13 @@ export default function RecommendedSection() {
     );
   }
 
-  const imageUrl = featuredArticle.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
-  const description = featuredArticle.content.substring(0, 150) + "...";
+  const imageUrl =
+    featuredArticle.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+  const plainText = featuredArticle.content?.replace(/<[^>]+>/g, "") || "";
+  const description =
+    plainText.length > 150
+      ? plainText.substring(0, 150) + "..."
+      : plainText;
   const categoryName = featuredArticle.blog_categories?.name || "Technology";
 
   return (
@@ -76,7 +80,7 @@ export default function RecommendedSection() {
       <h2 className="text-lg font-semibold mb-4">Recommended</h2>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Left - Featured Article */}
-        <Link href={`/blog/${featuredArticle.id}`}>
+        <Link href={`/blog/${featuredArticle.slug}`}>
           <div className="relative rounded-xl overflow-hidden cursor-pointer group">
             <Image
               src={imageUrl}
@@ -85,6 +89,7 @@ export default function RecommendedSection() {
               height={400}
               className="w-full h-auto object-cover rounded-xl"
             />
+
             {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 flex flex-col justify-end text-white">
               <div className="flex space-x-2 mb-2">
@@ -118,19 +123,19 @@ export default function RecommendedSection() {
         </Link>
 
         {/* Right - Social Section */}
-        <div className="flex flex-col justify-center items-center  gap-4 pt-2">
-          <h2 className="text-bold font-bold text-black">Connect With Us</h2>
+        <div className="flex flex-col justify-center items-center gap-4 pt-2">
+          <h2 className="font-bold text-black">Connect With Us</h2>
           <div className="grid grid-cols-2 gap-4">
-            <button className="w-20 h-20 bg-[#1877F2] text-white rounded-md flex items-center justify-center">
+            <button className="w-20 h-20 bg-[#1877F2] text-white rounded-md flex items-center justify-center hover:scale-105 transition">
               <FaFacebookF size={25} />
             </button>
-            <button className="w-20 h-20 bg-black text-white rounded-md flex items-center justify-center">
+            <button className="w-20 h-20 bg-black text-white rounded-md flex items-center justify-center hover:scale-105 transition">
               <FaXTwitter size={25} />
             </button>
-            <button className="w-20 h-20 bg-[#0A66C2] text-white rounded-md flex items-center justify-center">
+            <button className="w-20 h-20 bg-[#0A66C2] text-white rounded-md flex items-center justify-center hover:scale-105 transition">
               <FaLinkedinIn size={25} />
             </button>
-            <button className="w-20 h-20 bg-[#FF0000] text-white rounded-md flex items-center justify-center">
+            <button className="w-20 h-20 bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white rounded-md flex items-center justify-center hover:scale-105 transition">
               <FaInstagram size={25} />
             </button>
           </div>
@@ -139,6 +144,3 @@ export default function RecommendedSection() {
     </section>
   );
 }
-
-
-      

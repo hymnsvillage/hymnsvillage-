@@ -76,7 +76,8 @@ export default function HeroBannerSlider() {
       >
         {slides.map((slide, index) => {
           const imageUrl = slide.blog_media?.[0]?.url || "/blog 1.png";
-          const description = slide.content.substring(0, 150) + "...";
+          const plainText = slide.content.replace(/<[^>]+>/g, "");
+          const description = plainText.substring(0, 150) + "...";
           const categoryName = slide.blog_categories?.name || "Technology";
           
           return (
