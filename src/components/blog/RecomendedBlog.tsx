@@ -3,23 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-  FaXTwitter,
-} from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 
 interface Blog {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  category_id: string;
   slug: string;
-  blog_media: Array<{ url: string }>;
-  blog_categories: { name: string };
-  created_at: string;
+  featuredImage?: string;
+  categories?: { id: number; name: string }[];
   author_name?: string;
+  created_at: string;
 }
 
 export default function RecommendedSection() {
@@ -29,11 +23,31 @@ export default function RecommendedSection() {
   useEffect(() => {
     async function fetchFeaturedArticle() {
       try {
-        const res = await fetch("/api/blog/recent");
-        const result = await res.json();
-        if (result.success && result.data.blogs.length > 0) {
-          // Use the first blog as featured
-          setFeaturedArticle(result.data.blogs[0]);
+        const res = await fetch(
+          "https://cms.hymnsvillage.com/wp-json/wp/v2/posts?_embed&per_page=1"
+        );
+        const data = await res.json();
+
+        if (data.length > 0) {
+          const post = data[0];
+          const article: Blog = {
+            id: post.id,
+            title: post.title.rendered,
+            content: post.content.rendered,
+            slug: post.slug,
+            featuredImage:
+              post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+              "/Rectangle 1 (1).png",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            categories: post._embedded?.["wp:term"]?.[0]?.map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+            })),
+            author_name: post._embedded?.author?.[0]?.name || "Author",
+            created_at: post.date,
+          };
+
+          setFeaturedArticle(article);
         }
       } catch (error) {
         console.error("Failed to fetch featured article:", error);
@@ -66,14 +80,11 @@ export default function RecommendedSection() {
     );
   }
 
-  const imageUrl =
-    featuredArticle.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+  const imageUrl = featuredArticle.featuredImage || "/Rectangle 1 (1).png";
   const plainText = featuredArticle.content?.replace(/<[^>]+>/g, "") || "";
   const description =
-    plainText.length > 150
-      ? plainText.substring(0, 150) + "..."
-      : plainText;
-  const categoryName = featuredArticle.blog_categories?.name || "Technology";
+    plainText.length > 150 ? plainText.substring(0, 150) + "..." : plainText;
+  const categoryName = featuredArticle.categories?.[0]?.name || "Technology";
 
   return (
     <section className="bg-white px-6 md:px-16 py-8">

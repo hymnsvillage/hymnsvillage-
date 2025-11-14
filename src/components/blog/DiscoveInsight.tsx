@@ -5,15 +5,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Blog {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  category_id: string;
   slug: string;
-  blog_media: Array<{ url: string }>;
-  blog_categories: { name: string };
-  created_at: string;
+  featuredImage?: string;
+  categories?: { id: number; name: string }[];
   author_name?: string;
+  created_at: string;
 }
 
 interface BlogCardProps {
@@ -21,15 +20,13 @@ interface BlogCardProps {
 }
 
 function BlogCard({ article }: BlogCardProps) {
-  const imageUrl = article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
-  const categoryName = article.blog_categories?.name || "Technology";
+  const imageUrl = article.featuredImage || "/Rectangle 1 (1).png";
+  const categoryName = article.categories?.[0]?.name || "General";
 
   // Convert HTML content to plain text and trim
   const plainText = article.content?.replace(/<[^>]+>/g, "") || "";
   const description =
-    plainText.length > 100
-      ? plainText.substring(0, 100) + "..."
-      : plainText;
+    plainText.length > 100 ? plainText.substring(0, 100) + "..." : plainText;
 
   return (
     <Link href={`/blog/${article.slug}`} className="group">
@@ -68,11 +65,30 @@ export default function DiscoverInsights() {
   useEffect(() => {
     async function fetchInsightBlogs() {
       try {
-        const res = await fetch("/api/blog/recent");
-        const result = await res.json();
+        const res = await fetch(
+          "https://cms.hymnsvillage.com/wp-json/wp/v2/posts?_embed"
+        );
+        const data = await res.json();
 
-        if (result.success && result.data.blogs.length > 0) {
-          const blogs = result.data.blogs;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blogs: Blog[] = data.map((post: any) => ({
+          id: post.id,
+          title: post.title.rendered,
+          content: post.content.rendered,
+          slug: post.slug,
+          featuredImage:
+            post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+            "/Rectangle 1 (1).png",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          categories: post._embedded?.["wp:term"]?.[0]?.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          author_name: post._embedded?.author?.[0]?.name || "Author",
+          created_at: post.date,
+        }));
+
+        if (blogs.length > 0) {
           setArticles(blogs.slice(3, 8));
           setRecent(blogs.slice(0, 4));
         }
@@ -142,10 +158,8 @@ export default function DiscoverInsights() {
         {/* Sidebar Recent Posts */}
         <div className="space-y-4">
           {recent.map((article) => {
-            const imageUrl =
-              article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
-            const categoryName =
-              article.blog_categories?.name || "General";
+            const imageUrl = article.featuredImage || "/Rectangle 1 (1).png";
+            const categoryName = article.categories?.[0]?.name || "General";
 
             return (
               <Link

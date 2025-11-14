@@ -6,45 +6,46 @@ import { FaSearch } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface Blog {
-  id: string;
-  title: string;
-  content: string;
-  category_id: string;
+// 🔹 WordPress REST API base URL
+const WP_API_URL = "https://cms.hymnsvillage.com/wp-json/wp/v2/posts?_embed&per_page=6";
+
+interface WPPost {
+  id: number;
   slug: string;
-  blog_media: Array<{ url: string }>;
-  blog_categories: { name: string };
-  created_at: string;
-  author_name?: string;
+  title: { rendered: string };
+  date: string;
+  _embedded?: {
+    ["wp:featuredmedia"]?: Array<{ source_url: string }>;
+    ["wp:term"]?: Array<Array<{ name: string }>>;
+    author?: Array<{ name: string }>;
+  };
 }
 
 export default function InsightsSection() {
   const [query, setQuery] = useState("");
-  const [featured, setFeatured] = useState<Blog[]>([]);
-  const [recent, setRecent] = useState<Blog[]>([]);
+  const [featured, setFeatured] = useState<WPPost[]>([]);
+  const [recent, setRecent] = useState<WPPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchInsights() {
+    async function fetchFromWordPress() {
       try {
-        const res = await fetch("/api/blog/recent");
-        const result = await res.json();
+        const res = await fetch(WP_API_URL, { cache: "no-store" });
+        const data: WPPost[] = await res.json();
 
-        if (result.success && result.data.blogs.length > 0) {
-          // first 3 = featured, next 3 = recent
-          setFeatured(result.data.blogs.slice(0, 3));
-          setRecent(result.data.blogs.slice(3, 6));
-        }
+        // Split posts — first 3 = featured, next 3 = recent
+        setFeatured(data.slice(0, 3));
+        setRecent(data.slice(3, 6));
       } catch (error) {
-        console.error("Failed to fetch blogs:", error);
+        console.error("Failed to fetch WordPress posts:", error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchInsights();
+    fetchFromWordPress();
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,36 +102,43 @@ export default function InsightsSection() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left: Featured */}
         <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {featured.map((article) => {
-            const imageUrl = article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+          {featured.map((post) => {
+            const imageUrl =
+              post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+              "/Rectangle 1 (1).png";
+            const category =
+              post._embedded?.["wp:term"]?.[0]?.[0]?.name || "General";
+            const author =
+              post._embedded?.author?.[0]?.name || "Author";
+
             return (
               <Link
-                key={article.id}
-                href={`/blog/${article.id}`}
+                key={post.id}
+                href={`/blog/${post.slug}`}
                 className="bg-white rounded-lg overflow-hidden block"
               >
                 <div className="relative w-full h-40">
                   <Image
                     src={imageUrl}
-                    alt={article.title}
+                    alt={post.title.rendered}
                     fill
                     className="object-cover"
                   />
                   <span
                     className={`absolute top-2 left-2 text-xs px-2 py-1 rounded-full text-white ${getBadgeColor(
-                      article.blog_categories?.name || "general"
+                      category
                     )}`}
                   >
-                    {article.blog_categories?.name || "General"}
+                    {category}
                   </span>
                 </div>
                 <div className="p-3 space-y-1">
-                  <h3 className="text-sm font-semibold text-black leading-snug">
-                    {article.title}
-                  </h3>
+                  <h3
+                    className="text-sm font-semibold text-black leading-snug"
+                    dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                  />
                   <p className="text-xs text-black">
-                    {article.author_name || "Author"} •{" "}
-                    {new Date(article.created_at).toLocaleDateString()}
+                    {author} • {new Date(post.date).toLocaleDateString()}
                   </p>
                 </div>
               </Link>
@@ -138,34 +146,41 @@ export default function InsightsSection() {
           })}
         </div>
 
-        {/* Right: Recent Articles Sidebar */}
+        {/* Right: Recent Sidebar */}
         <div className="space-y-4">
-          {recent.map((article) => {
-            const imageUrl = article.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
+          {recent.map((post) => {
+            const imageUrl =
+              post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+              "/Rectangle 1 (1).png";
+            const category =
+              post._embedded?.["wp:term"]?.[0]?.[0]?.name || "General";
+            const author =
+              post._embedded?.author?.[0]?.name || "Author";
+
             return (
               <Link
-                key={article.id}
-                href={`/blog/${article.id}`}
+                key={post.id}
+                href={`/blog/${post.slug}`}
                 className="flex items-start gap-5 pb-4 border-b border-gray-200"
               >
                 <div className="w-16 h-16 relative rounded-md overflow-hidden bg-gray-100">
                   <Image
                     src={imageUrl}
-                    alt={article.title}
+                    alt={post.title.rendered}
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div className="flex-1">
                   <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full inline-block mb-1">
-                    {article.blog_categories?.name || "General"}
+                    {category}
                   </span>
-                  <h4 className="text-sm font-semibold text-black">
-                    {article.title}
-                  </h4>
+                  <h4
+                    className="text-sm font-semibold text-black"
+                    dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                  />
                   <p className="text-xs text-black">
-                    {article.author_name || "Author"} •{" "}
-                    {new Date(article.created_at).toLocaleDateString()}
+                    {author} • {new Date(post.date).toLocaleDateString()}
                   </p>
                 </div>
               </Link>
@@ -183,6 +198,7 @@ function getBadgeColor(category: string) {
       return "bg-red-500";
     case "technology":
       return "bg-gray-800";
+    case "faith":
     case "mysticism":
       return "bg-yellow-500";
     case "travel":

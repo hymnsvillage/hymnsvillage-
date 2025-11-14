@@ -5,15 +5,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Blog {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  category_id: string;
   slug: string;
-  blog_media: Array<{ url: string }>;
-  blog_categories: { name: string };
-  created_at: string;
+  featuredImage?: string;
+  categories?: { id: number; name: string }[];
   author_name?: string;
+  created_at: string;
 }
 
 export default function RecentPosts() {
@@ -23,12 +22,30 @@ export default function RecentPosts() {
   useEffect(() => {
     async function fetchRecentPosts() {
       try {
-        const res = await fetch("/api/blog/recent");
-        const result = await res.json();
+        const res = await fetch(
+          "https://cms.hymnsvillage.com/wp-json/wp/v2/posts?_embed&per_page=6"
+        );
+        const data = await res.json();
 
-        if (result.success && result.data.blogs.length > 0) {
-          setRecentPosts(result.data.blogs);
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blogs: Blog[] = data.map((post: any) => ({
+          id: post.id,
+          title: post.title.rendered,
+          content: post.content.rendered,
+          slug: post.slug,
+          featuredImage:
+            post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+            "/Rectangle 1 (1).png",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          categories: post._embedded?.["wp:term"]?.[0]?.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          author_name: post._embedded?.author?.[0]?.name || "Author",
+          created_at: post.date,
+        }));
+
+        setRecentPosts(blogs);
       } catch (error) {
         console.error("Failed to fetch recent posts:", error);
       } finally {
@@ -60,8 +77,8 @@ export default function RecentPosts() {
       <h2 className="text-2xl font-semibold mb-6">Recent Posts</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {recentPosts.map((post) => {
-          const imageUrl = post.blog_media?.[0]?.url || "/Rectangle 1 (1).png";
-          const categoryName = post.blog_categories?.name || "Technology";
+          const imageUrl = post.featuredImage || "/Rectangle 1 (1).png";
+          const categoryName = post.categories?.[0]?.name || "Technology";
 
           // Remove HTML tags from content and create short description
           const plainText = post.content.replace(/<[^>]+>/g, "");

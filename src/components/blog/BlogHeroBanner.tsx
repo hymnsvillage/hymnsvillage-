@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -12,15 +11,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface Blog {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  category_id: string;
   slug: string;
-  blog_media: Array<{ url: string }>;
-  blog_categories: { name: string };
-  created_at: string;
+  featuredImage?: string;
+  categories?: { id: number; name: string }[];
   author_name?: string;
+  created_at: string;
 }
 
 export default function HeroBannerSlider() {
@@ -30,12 +28,30 @@ export default function HeroBannerSlider() {
   useEffect(() => {
     async function fetchHeroBlogs() {
       try {
-        const res = await fetch('/api/blog/recent');
-        const result = await res.json();
-        if (result.success && result.data.blogs.length > 0) {
-          // Take first 3 blogs for hero slider
-          setSlides(result.data.blogs.slice(0, 3));
-        }
+        const res = await fetch(
+          "https://cms.hymnsvillage.com/wp-json/wp/v2/posts?_embed&per_page=3"
+        );
+        const data = await res.json();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blogs: Blog[] = data.map((post: any) => ({
+          id: post.id,
+          title: post.title.rendered,
+          content: post.content.rendered,
+          slug: post.slug,
+          featuredImage:
+            post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+            "/blog 1.png",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          categories: post._embedded?.["wp:term"]?.[0]?.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+          })),
+          author_name: post._embedded?.author?.[0]?.name || "Author",
+          created_at: post.date,
+        }));
+
+        setSlides(blogs);
       } catch (error) {
         console.error("Failed to fetch hero blogs:", error);
       } finally {
@@ -68,21 +84,16 @@ export default function HeroBannerSlider() {
 
   return (
     <section className="relative w-full h-[500px]">
-      <Swiper
-        modules={[Autoplay]}
-        autoplay={{ delay: 7000 }}
-        loop
-        className="w-full h-full"
-      >
+      <Swiper modules={[Autoplay]} autoplay={{ delay: 7000 }} loop className="w-full h-full">
         {slides.map((slide, index) => {
-          const imageUrl = slide.blog_media?.[0]?.url || "/blog 1.png";
+          const imageUrl = slide.featuredImage || "/blog 1.png";
           const plainText = slide.content.replace(/<[^>]+>/g, "");
           const description = plainText.substring(0, 150) + "...";
-          const categoryName = slide.blog_categories?.name || "Technology";
-          
+          const categoryName = slide.categories?.[0]?.name || "Technology";
+
           return (
             <SwiperSlide key={slide.id}>
-              <Link href={`/blog/${slide.id}`}>
+              <Link href={`/blog/${slide.slug}`}>
                 <div className="relative w-full h-[500px] cursor-pointer">
                   <Image
                     src={imageUrl}
@@ -125,7 +136,6 @@ export default function HeroBannerSlider() {
                         </span>
                       </div>
                     </div>
-                    {/* Styled Right Arrow Only */}
                     <button className="absolute right-10 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:scale-105 transition">
                       <IoChevronForwardCircle className="drop-shadow-xl text-white/90" />
                     </button>

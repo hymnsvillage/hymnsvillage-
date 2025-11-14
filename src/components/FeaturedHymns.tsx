@@ -16,21 +16,21 @@ const hymns: Hymn[] = [
     image: '/efik-hymns.jpg',
     description:
       'JEHOVAH - UBọn ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm..." Psalm 145:8 - 14. Abasi',
-    link: '/hymns/efik',
+    link: '/hymnals/efik',
   },
   {
     title: 'English Hymns',
     image: '/english-hymns.jpg',
     description:
       'THE CHURCH CONGREGATIONAL HYMNS 1 THE LORD - HIS GLORY (C. M.) C. H. 242 The Lord Is Very Gracious. The Lord Is Gracious And Full Of Compassion.',
-    link: '/hymns/english',
+    link: '/hymnals/english',
   },
   {
     title: 'Ibibio Hymns',
     image: '/ibibio-hymns.jpg',
     description:
-      'JEHOVAH - UBÔÑ ESIE 1 JEHOVAH - UBÔÑ ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm.',
-    link: '/hymns/ibibio',
+      'JEHOVAH - UBÔÑ ESIE Bedford (C.M.) R. C. H. 242M. H. B. 155 Abasi Nnyin Òfọn Eti "Jehovah Enyene Esit Ufọn Ye Mbọm."',
+    link: '/hymnals/ibibio', // ✅ Corrected link
   },
 ];
 
@@ -63,8 +63,12 @@ export default function FeaturedHymns() {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-black text-lg font-semibold mb-2">{hymn.title}</h3>
-                <p className="text-sm text-gray-700 line-clamp-4">{hymn.description}</p>
+                <h3 className="text-black text-lg font-semibold mb-2">
+                  {hymn.title}
+                </h3>
+                <p className="text-sm text-gray-700 line-clamp-4">
+                  {hymn.description}
+                </p>
               </div>
             </div>
           </Link>
