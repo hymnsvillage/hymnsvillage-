@@ -126,6 +126,12 @@ const AboutPage = () => {
                 role: 'Member',
                 img: '/sultan.jpg',
               },
+               {
+                name: 'Christina Christopher',
+                role: 'Software Developer',
+                img: '/christeee.jpg',
+              },
+                
             ])
             .flat()
             .map((member, i) => (
