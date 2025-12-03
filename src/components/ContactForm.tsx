@@ -6,7 +6,7 @@ interface ContactFormProps {
   category: string;
 }
 
-export default function ContactForm({ category }: ContactFormProps) {
+export default function ContactForm({ }: ContactFormProps) {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Send us a message</h2>
