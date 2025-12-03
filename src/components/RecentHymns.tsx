@@ -1,21 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Music, Play, Download } from 'lucide-react';
-
-// Import JSON files
-import english from '@/data/englishHymns.json';
-import efik from '@/data/efikHymns.json';
-import ibibio from '@/data/ibibioHymns.json';
 import Link from 'next/link';
 
 type HymnCategory = 'All' | 'Efik' | 'English' | 'Ibibio';
 
-type Hymn = {
-  slug: string;
+interface Hymn {
   id: number;
+  slug: string;
   title: string;
   author: string;
   lyrics: string;
@@ -24,74 +19,96 @@ type Hymn = {
   image: string;
   audioUrl: string;
   lyricsUrl: string;
-};
-
-// Add extra display props (date, image...) to all imported hymns
-const allHymns: Hymn[] = [
-  ...english.map((h) => ({
-    ...h,
-    category: 'English',
-    date: '2025-01-03',
-    image: '/hymn-image-5.jpg',
-    audioUrl: '/sample-audio.mp3',
-    lyricsUrl: '/sample-lyrics.pdf',
-  })),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...efik.map((h: any) => ({
-    ...h,
-    category: 'Efik',
-    date: '2025-01-03',
-    image: '/hymn-image-4.jpg',
-    audioUrl: '/sample-audio.mp3',
-    lyricsUrl: '/sample-lyrics.pdf',
-  })),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ...ibibio.map((h: any) => ({
-    ...h,
-    category: 'Ibibio',
-    date: '2025-01-03',
-    image: '/hymn-image-6.jpg',
-    audioUrl: '/sample-audio.mp3',
-    lyricsUrl: '/sample-lyrics.pdf',
-  })),
-];
+}
 
 export default function RecentHymns() {
-    const [selectedCategory, setSelectedCategory] = useState<HymnCategory>('All');
-    const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+  const [hymns, setHymns] = useState<Hymn[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<HymnCategory>('All');
+  const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const filteredHymns =
+  // Fetch hymns from WordPress
+  useEffect(() => {
+    async function fetchHymns() {
+      try {
+        const res = await fetch(
+          'https://cms.hymnsvillage.com/wp-json/wp/v2/hymns?_embed&per_page=100'
+        );
+        if (!res.ok) throw new Error('Failed to fetch hymns');
+
+        const data = await res.json();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const formatted: Hymn[] = data.map((h: any) => {
+          // Determine category from ACF field
+          const rawCategory = h.acf?.category?.toLowerCase() || 'english';
+
+          const category: HymnCategory =
+            rawCategory === 'efik'
+              ? 'Efik'
+              : rawCategory === 'ibibio'
+              ? 'Ibibio'
+              : 'English';
+
+          return {
+            id: h.id,
+            slug: h.slug, // <-- IMPORTANT: REAL WORDPRESS SLUG
+            title: h.title.rendered,
+            author: h.acf?.author || 'Unknown',
+            lyrics: h.acf?.lyrics || '',
+            category,
+            date: new Date(h.date).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            image: h._embedded['wp:featuredmedia']?.[0]?.source_url || '/placeholder.jpg',
+            audioUrl: h.acf?.audio || '/sample-audio.mp3',
+            lyricsUrl: h.acf?.lyrics_file || '/sample-lyrics.pdf',
+          };
+        });
+
+        setHymns(formatted);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchHymns();
+  }, []);
+
+  const filteredHymns =
     selectedCategory === 'All'
-      ? allHymns
-      : allHymns.filter((hymn) => hymn.category === selectedCategory);
+      ? hymns
+      : hymns.filter((hymn) => hymn.category === selectedCategory);
 
-    const handlePlay = (audioUrl: string) => {
-    setCurrentAudio(audioUrl);
-    };
+  const handlePlay = (audioUrl: string) => setCurrentAudio(audioUrl);
 
-    const handleDownload = (lyricsUrl: string, title: string) => {
+  const handleDownload = (lyricsUrl: string, title: string) => {
     const a = document.createElement('a');
-       a.href = lyricsUrl;
-       a.download = `${title}.pdf`;
-       a.click();
-    };
+    a.href = lyricsUrl;
+    a.download = `${title}.pdf`;
+    a.click();
+  };
 
-    const handleMusicInfo = (title: string) => {
-       alert(`Showing info for "${title}"`);
-     };
+  const handleMusicInfo = (title: string) => alert(`Showing info for "${title}"`);
 
-    const slugify = (title: string) =>
-      title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')  // remove punctuation
-      .replace(/\s+/g, '-')         // replace spaces with hyphens
-      .trim();
+  if (loading)
+    return <p className="text-center mt-20 text-slate-700">Loading hymns...</p>;
 
+  if (error)
+    return <p className="text-center mt-20 text-red-500">{error}</p>;
 
   return (
     <div className="bg-white p-6 max-w-screen-xl mx-auto">
       <div className="flex flex-col md:flex-row md:justify-between">
         <h2 className="text-slate-900 text-3xl font-semibold mb-6">Recent Hymns</h2>
+
         <div className="flex flex-wrap gap-2 mb-6">
           {(['All', 'Efik', 'English', 'Ibibio'] as HymnCategory[]).map((cat) => (
             <Button
@@ -112,23 +129,21 @@ export default function RecentHymns() {
             className="bg-white rounded-2xl shadow-lg overflow-hidden transition hover:shadow-xl"
           >
             <div className="relative w-full h-48">
-              <Image
-                src={hymn.image}
-                alt={hymn.title}
-                fill
-                className="object-cover"
-              />
+              <Image src={hymn.image} alt={hymn.title} fill className="object-cover" />
             </div>
+
             <div className="p-4">
               <p className="text-sm text-slate-500">{hymn.author}</p>
 
-              <Link href={`/hymnals/${hymn.category.toLowerCase()}/${slugify(hymn.title)}`}>
+              {/* FIXED URL — using REAL WP slug */}
+              <Link href={`/hymnals/${hymn.slug}`}>
                 <h3 className="text-lg font-semibold text-slate-700 hover:underline mt-1 mb-2 truncate">
                   {hymn.title}
                 </h3>
               </Link>
 
               <p className="text-sm text-red-500">{hymn.date}</p>
+
               <div className="flex space-x-2 mt-4">
                 <Button
                   size="icon"
@@ -137,6 +152,7 @@ export default function RecentHymns() {
                 >
                   <Download size={16} />
                 </Button>
+
                 <Button
                   size="icon"
                   className="rounded-full bg-red-500 text-white"
@@ -144,6 +160,7 @@ export default function RecentHymns() {
                 >
                   <Music size={16} />
                 </Button>
+
                 <Button
                   size="icon"
                   className="rounded-full bg-red-500 text-white"
